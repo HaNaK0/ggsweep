@@ -1,9 +1,10 @@
 use ggez::{event, ContextBuilder, GameResult, graphics};
 use log::{info};
 
-
 mod states;
-use states::MainState;
+use states::{GameState, MainState};
+
+mod state;
 
 fn main() -> GameResult {
 	simple_logger::SimpleLogger::new()
@@ -17,7 +18,9 @@ fn main() -> GameResult {
 	let (ctx, events_loop) = &mut cb.build()?;
 
 	info!("{}", graphics::renderer_info(ctx)?);
-	let state = &mut MainState::new()?;
+
+	let initial_state = Box::new(GameState::new(ctx)?);
+	let state = &mut MainState::new(initial_state)?;
 
 	event::run(ctx, events_loop, state)
 }

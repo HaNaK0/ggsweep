@@ -1,7 +1,5 @@
-use std::{any::TypeId, collections::VecDeque};
-
-use ggez::{event, graphics};
-use ggez::nalgebra as na;
+use std::collections::VecDeque;
+use ggez::event;
 
 use crate::state;
 
@@ -26,7 +24,7 @@ impl MainState {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult {
-		for (i, state) in self.state_stack.iter().enumerate() {
+		for (i, state) in self.state_stack.iter_mut().enumerate() {
 			match state.update(ctx)? {
 			    state::UpdateResult::LetThrough => {}
 			    state::UpdateResult::Block => break,
@@ -49,19 +47,17 @@ impl event::EventHandler for MainState {
     }
 
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult {
-		let states: Vec<&Box<dyn state::State>> = self.state_stack.iter()
-			.scan(true, |cont, state| {
-				if *cont {
-					*cont = state.let_through_draw();
-					Some(state)
-				} else {
-					None
-				}
-			})
-			.collect();
-		
-		for state in states.iter().rev() {
-			state.draw(ctx)?;
+		let mut index = 0;
+
+		for i in 1..self.state_stack.len() {
+			if !self.state_stack[i - 1].let_through_draw() {
+				break;
+			}
+			index = i;
+		}
+
+		for i in (0..index+1).rev() {
+			self.state_stack[i].draw(ctx)?;
 		}
 
 		Ok(())

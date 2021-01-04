@@ -16,6 +16,8 @@ pub enum UpdateResult {
 	Swap(Box<dyn State>),
 	/// Push the contained state to the top of the stack
 	Push(Box<dyn State>),
+	/// Pop the topmost state
+	Pop,
 }
 
 /// A state in a state stack   

@@ -1,42 +1,69 @@
+use std::{any::TypeId, collections::VecDeque};
+
 use ggez::{event, graphics};
 use ggez::nalgebra as na;
 
+use crate::state;
 
-const GRID_SIZE: f32 = 32.0;
-
+/// The main state that contains all other states in a state stack
 pub struct MainState {
-	square_color: graphics::Color,
-	square_origin: na::Point2<f32>,
+	state_stack: VecDeque<Box<dyn state::State>>
 }
 
+
 impl MainState {
-	pub fn new() -> ggez::GameResult<MainState> {
+	/// Creates and loads the main state
+	pub fn new(initial_state: Box<dyn state::State>) -> ggez::GameResult<MainState> {
+		let state_stack:VecDeque<Box<dyn state::State>> = vec![initial_state].into();
+
 		let state = MainState {
-			square_color: graphics::Color::new(0.0, 0.5, 1.0, 1.0),
-			square_origin: na::Point2::new(400.0, 400.0),
+			state_stack,
 		};
+
 		Ok(state)
 	}
 }
 
 impl event::EventHandler for MainState {
-    fn update(&mut self, _ctx: &mut ggez::Context) -> ggez::GameResult {
+    fn update(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult {
+		for (i, state) in self.state_stack.iter().enumerate() {
+			match state.update(ctx)? {
+			    state::UpdateResult::LetThrough => {}
+			    state::UpdateResult::Block => break,
+			    state::UpdateResult::Swap(new_state) => {
+					self.state_stack[i] = new_state;
+					break;
+				}
+			    state::UpdateResult::Push(new_state) => {
+					self.state_stack.push_front(new_state);
+					break;
+				}
+				state::UpdateResult::Pop => {
+					self.state_stack.pop_front();
+					break;
+				}
+			}
+		}
+
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult {
-		graphics::clear(ctx, graphics::BLACK);
+		let states: Vec<&Box<dyn state::State>> = self.state_stack.iter()
+			.scan(true, |cont, state| {
+				if *cont {
+					*cont = state.let_through_draw();
+					Some(state)
+				} else {
+					None
+				}
+			})
+			.collect();
+		
+		for state in states.iter().rev() {
+			state.draw(ctx)?;
+		}
 
-		let rect = graphics::Rect::new(self.square_origin.x, self.square_origin.y, GRID_SIZE, GRID_SIZE);
-		let square = graphics::Mesh::new_rectangle(
-			ctx, 
-			graphics::DrawMode::fill(), 
-			rect, 
-			self.square_color,
-		)?;
-
-		graphics::draw(ctx, &square, graphics::DrawParam::default())?;
-
-		graphics::present(ctx)
+		Ok(())
     }
 }

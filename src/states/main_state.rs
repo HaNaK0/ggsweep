@@ -1,21 +1,23 @@
 use std::collections::VecDeque;
-use ggez::event;
+use ggez::{event, graphics};
 
 use crate::state;
 
 /// The main state that contains all other states in a state stack
 pub struct MainState {
-	state_stack: VecDeque<Box<dyn state::State>>
+	state_stack: VecDeque<Box<dyn state::State>>,
+	clear_color: graphics::Color,
 }
 
 
 impl MainState {
 	/// Creates and loads the main state
-	pub fn new(initial_state: Box<dyn state::State>) -> ggez::GameResult<MainState> {
+	pub fn new(initial_state: Box<dyn state::State>, clear_color: graphics::Color) -> ggez::GameResult<MainState> {
 		let state_stack:VecDeque<Box<dyn state::State>> = vec![initial_state].into();
 
 		let state = MainState {
 			state_stack,
+			clear_color,
 		};
 
 		Ok(state)
@@ -56,9 +58,13 @@ impl event::EventHandler for MainState {
 			index = i;
 		}
 
+		graphics::clear(ctx, self.clear_color);
+
 		for i in (0..index+1).rev() {
 			self.state_stack[i].draw(ctx)?;
 		}
+
+		graphics::present(ctx)?;
 
 		Ok(())
     }

@@ -28,8 +28,8 @@ pub struct GameState {
 	grid: Vec<SquareState>,
 	mines: std::collections::HashSet<usize>,
 	flag_image: graphics::Image,
+	square: graphics::Mesh,
 	timer: Duration,
-	testing_dest: Point2,
 }
 
 impl GameState {
@@ -41,13 +41,21 @@ impl GameState {
 
 		
 		let flag_image = graphics::Image::new(ctx, "\\flag.png")?;
+		let color = (0, 191, 255).into();
 
 		while mines.len() < number_of_mines {
 			mines.insert(rng.gen_range(0..grid.len()));
 		}
 
-		let testing_dest = Point2::new(0.0, 0.0);
-		Ok(GameState {game_size, grid, mines, flag_image, timer: Duration::new(0, 0), testing_dest})
+		let rect = graphics::Rect::new(0.0, 0.0, GRID_SIZE, GRID_SIZE);
+		let square = graphics::Mesh::new_rectangle(
+			ctx,
+			graphics::DrawMode::fill(),
+			rect.clone(),
+			color
+		)?;
+
+		Ok(GameState {game_size, grid, mines, flag_image, square, timer: Duration::new(0, 0)})
 	}
 
 	fn index_to_point(& self, i: usize) -> na::Vector2<i32> {
@@ -71,42 +79,25 @@ impl GameState {
 	}
 
 	fn draw_squares(& self, ctx: &mut ggez::Context) -> GameResult<()> {
-		let color = (0.1, 0.5, 1.0, 1.0).into();
-		
-
 		for i in 0..self.grid.len() {
-			let v = Point2::new((i % self.game_size.0 ) as f32 * GRID_SIZE, (i / self.game_size.0 ) as f32 * GRID_SIZE);
-			
-			let rect = graphics::Rect::new(v.x, v.y, GRID_SIZE, GRID_SIZE);
-			let square = graphics::Mesh::new_rectangle(
-				ctx,
-				graphics::DrawMode::fill(),
-				rect.clone(),
-				color
-			)?;
+			let point = self.index_to_point(i);
+			let v = GRID_SIZE * Point2::new(point.x as f32, point.y as f32);
 
-			let square_border = graphics::Mesh::new_rectangle(
-				ctx,
-				graphics::DrawMode::stroke(3.0),
-				rect.clone(),
-				(7.0, 7.0, 7.0, 0.7).into()
-			)?;
-
-			let params = graphics::DrawParam::new();
-			params.dest(v);
+			let mut params = graphics::DrawParam::new();
+			params.dest = v.into();
 			
 			match self.grid[i] {
 			    SquareState::Closed(flag) => {
-					graphics::draw(ctx, &square, params)?;
+					graphics::draw(ctx, &self.square, params)?;
 
 					if flag {
-						
+						let scale = GRID_SIZE / self.flag_image.dimensions().w;
+						params.scale = Vector2::new(scale, scale).into();
+						graphics::draw(ctx, &self.flag_image, params)?;
 					}
 				}
 			    SquareState::Open(_) => {}
 			}
-
-			graphics::draw(ctx, &square_border, params)?;
 		}
 		Ok(())
 	}
@@ -128,22 +119,11 @@ impl State for GameState {
 			self.timer = Duration::new(0, 0);
 		}
 
-		self.testing_dest += Vector2::new(1.0, 1.0) * dt.as_secs_f32();
-
 		Ok(UpdateResult::Block)
     }
 
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<()> {
-		graphics::clear(ctx, graphics::BLACK);
-
 		self.draw_squares(ctx)?;
-		
-		let params = graphics::DrawParam::new();
-		params.dest(self.testing_dest);
-		graphics::draw(ctx, &self.flag_image, params)?;
-
-		graphics::present(ctx)?;
-
 		Ok(())
     }
 }

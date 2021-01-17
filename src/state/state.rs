@@ -1,4 +1,5 @@
 ///The result returned from an event handling function
+#[derive(PartialEq)]
 pub enum EventResult{
 	/// Let the event through to the state below this one
 	LetThrough,
@@ -33,5 +34,9 @@ pub trait State {
 	/// Called by mainstate draw to check wether the state blow this one should be drawn
 	fn let_through_draw(&mut self) -> bool {
 		false
+	}
+
+	fn mouse_motion_event(&mut self, ctx: &mut ggez::Context, x: f32, y: f32, dx: f32, dy: f32) -> ggez::GameResult<EventResult> {
+		Ok(EventResult::LetThrough)
 	}
 }

@@ -1,5 +1,9 @@
 use std::collections::VecDeque;
-use ggez::{event, graphics, Context};
+use ggez::{Context, GameResult, event, graphics};
+use ggez::nalgebra as na;
+use state::EventResult;
+
+use log::error;
 
 use crate::state;
 
@@ -7,6 +11,7 @@ use crate::state;
 pub struct MainState {
 	state_stack: VecDeque<Box<dyn state::State>>,
 	clear_color: graphics::Color,
+	event_result: GameResult<()>,
 }
 
 
@@ -18,6 +23,7 @@ impl MainState {
 		let state = MainState {
 			state_stack,
 			clear_color,
+			event_result: Ok(()),
 		};
 
 		Ok(state)
@@ -26,6 +32,11 @@ impl MainState {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult {
+		match &self.event_result {
+		    Ok(_) => {}
+		    Err(e) => { return Err(e.clone());}
+		}
+
 		for (i, state) in self.state_stack.iter_mut().enumerate() {
 			match state.update(ctx)? {
 			    state::UpdateResult::LetThrough => {}
@@ -69,7 +80,21 @@ impl event::EventHandler for MainState {
 		Ok(())
 	}
 	
-	fn mouse_motion_event(&mut self, _ctx: &mut Context, _x: f32, _y: f32, _dx: f32, _dy: f32) {
-		
+	fn mouse_motion_event(&mut self, ctx: &mut Context, x: f32, y: f32, dx: f32, dy: f32){
+
+		for state in &mut self.state_stack {
+			match state.mouse_motion_event(ctx, x, y, dx, dy) {
+			    Ok(r) => { 
+					if r == EventResult::Block {
+						break;
+					}
+				}
+			    Err(e) => {
+					error!("Encountered error in mouse motion event: {:?}", e);
+					self.event_result = Err(e);
+					break;
+				}
+			}
+		}
 	}
 }

@@ -10,6 +10,8 @@ use log::{trace, info};
 use crate::state::*;
 
 const GRID_SIZE: f32 = 32.0;
+const SQUARE_COLOR: (u8, u8, u8) = (0, 191, 255);
+const SELECT_COLOR: (u8, u8, u8) = (100, 200, 255);
 
 type Point2 = na::Point2<f32>;
 type Vector2 = na::Vector2<f32>;
@@ -30,6 +32,7 @@ pub struct GameState {
 	flag_image: graphics::Image,
 	square: graphics::Mesh,
 	timer: Duration,
+	mouse_index: Option<i32>,
 }
 
 impl GameState {
@@ -41,7 +44,7 @@ impl GameState {
 
 		
 		let flag_image = graphics::Image::new(ctx, "\\flag.png")?;
-		let color = (0, 191, 255).into();
+		let color = graphics::WHITE;
 
 		while mines.len() < number_of_mines {
 			mines.insert(rng.gen_range(0..grid.len()));
@@ -55,7 +58,7 @@ impl GameState {
 			color
 		)?;
 
-		Ok(GameState {game_size, grid, mines, flag_image, square, timer: Duration::new(0, 0)})
+		Ok(GameState {game_size, grid, mines, flag_image, square, timer: Duration::new(0, 0), mouse_index: None})
 	}
 
 	fn index_to_point(& self, i: usize) -> na::Vector2<i32> {
@@ -88,6 +91,16 @@ impl GameState {
 			
 			match self.grid[i] {
 			    SquareState::Closed(flag) => {
+					if let Some(index) = self.mouse_index {
+						params.color = if index == i as i32 {
+							SELECT_COLOR.into()
+						} else {
+							SQUARE_COLOR.into()
+						}
+					} else {
+						params.color = SQUARE_COLOR.into()
+					}
+
 					graphics::draw(ctx, &self.square, params)?;
 
 					if flag {
@@ -125,5 +138,17 @@ impl State for GameState {
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<()> {
 		self.draw_squares(ctx)?;
 		Ok(())
-    }
+	}
+	
+	fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) -> ggez::GameResult<EventResult> {
+		let point = na::Vector2::<i32>::new((x / GRID_SIZE) as i32, (y / GRID_SIZE) as i32);
+		
+		self.mouse_index = if point.x >= 0 && point.y >= 0 && point.x < self.game_size.0 as i32 && point.y < self.game_size.1 as i32{
+			Some(self.point_to_index(point) as i32)
+		} else {
+			None
+		};
+
+		Ok(EventResult::Block)
+	}
 }

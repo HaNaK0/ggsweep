@@ -8,6 +8,8 @@ use states::{GameState, MainState};
 
 mod state;
 
+mod convert;
+
 fn main() -> GameResult {
 	// Start the logger
 	simple_logger::SimpleLogger::new()

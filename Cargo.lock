@@ -27,7 +27,7 @@ version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f823d037a7ec6ea2197046bafd4ae150e6bc36f9ca347404f46a46823fa84f2"
 dependencies = [
- "approx",
+ "approx 0.3.2",
  "num-complex",
  "num-traits 0.2.14",
 ]
@@ -67,6 +67,15 @@ name = "approx"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0e60b75072ecd4168020818c0107f2857bb6c4e64252d8d3983f6263b40a5c3"
+dependencies = [
+ "num-traits 0.2.14",
+]
+
+[[package]]
+name = "approx"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f2a05fd1bd10b2527e20a2cd32d8873d115b8b39fe219ee25f42a8aca6ba278"
 dependencies = [
  "num-traits 0.2.14",
 ]
@@ -269,6 +278,16 @@ checksum = "55e7ec0b74fe5897894cbc207092c577e87c52f8a59e8ca8d97ef37551f60a49"
 dependencies = [
  "gleam",
  "libc",
+]
+
+[[package]]
+name = "cgmath"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a98d30140e3296250832bbaaff83b27dcd6fa3cc70fb6f1f3e5c9c0023b5317"
+dependencies = [
+ "approx 0.4.0",
+ "num-traits 0.2.14",
 ]
 
 [[package]]
@@ -684,7 +703,7 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a76347431050a0b4e1a925124cdcde614b628260093bb52560d9c6b48435336"
 dependencies = [
- "approx",
+ "approx 0.3.2",
  "bitflags",
  "directories",
  "gfx",
@@ -713,6 +732,7 @@ dependencies = [
 name = "ggsweep"
 version = "0.1.0"
 dependencies = [
+ "cgmath",
  "ggez",
  "log",
  "rand 0.8.1",
@@ -899,7 +919,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b70adc570f1dc71b6b32e241cbcc2b42175f5aea71951fbf41e68b04aec24c7"
 dependencies = [
- "approx",
+ "approx 0.3.2",
  "rusttype 0.8.3",
  "xi-unicode",
 ]
@@ -1238,7 +1258,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aaa9fddbc34c8c35dd2108515587b8ce0cab396f17977b8c738568e4edb521a2"
 dependencies = [
  "alga",
- "approx",
+ "approx 0.3.2",
  "generic-array",
  "matrixmultiply",
  "mint",
@@ -1837,7 +1857,7 @@ version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f61411055101f7b60ecf1041d87fb74205fb20b0c7a723f07ef39174cf6b4c0"
 dependencies = [
- "approx",
+ "approx 0.3.2",
  "crossbeam-deque",
  "crossbeam-utils 0.7.2",
  "linked-hash-map",

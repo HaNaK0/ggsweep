@@ -1,20 +1,21 @@
 use std::time::Duration;
 
 use ggez::{graphics, Context, GameResult};
-use ggez::nalgebra as na;
+use cgmath::prelude::*;
 
 use rand::prelude::*;
 
 use log::{trace, info};
 
 use crate::state::*;
+use crate::convert::*;
 
 const GRID_SIZE: f32 = 32.0;
 const SQUARE_COLOR: (u8, u8, u8) = (0, 191, 255);
 const SELECT_COLOR: (u8, u8, u8) = (100, 200, 255);
 
-type Point2 = na::Point2<f32>;
-type Vector2 = na::Vector2<f32>;
+type Point2 = cgmath::Point2<f32>;
+type Vector2 = cgmath::Vector2<f32>;
 
 /// The state of a square   
 /// A square can either be closed and the bool states wetehr the player has set a flag on the square
@@ -61,11 +62,11 @@ impl GameState {
 		Ok(GameState {game_size, grid, mines, flag_image, square, timer: Duration::new(0, 0), mouse_index: None})
 	}
 
-	fn index_to_point(& self, i: usize) -> na::Vector2<i32> {
-		na::Vector2::new((i % self.game_size.0) as i32, (i / self.game_size.0) as i32)
+	fn index_to_point(& self, i: usize) -> cgmath::Vector2<i32> {
+		cgmath::Vector2::new((i % self.game_size.0) as i32, (i / self.game_size.0) as i32)
 	}
 
-	fn point_to_index(& self, point: na::Vector2<i32>) -> usize {
+	fn point_to_index(& self, point: cgmath::Vector2<i32>) -> usize {
 		point.x as usize + point.y as usize * self.game_size.0
 	}
 
@@ -73,7 +74,7 @@ impl GameState {
 		let point = self.index_to_point(i);
 		(-1..1)
 			.map(|i| {
-				point + na::Vector2::new(i, 1 - i)
+				point + cgmath::Vector2::new(i, 1 - i)
 			}).filter(|v| {
 				v.x >= 0 && v.y >= 0 && v.x < self.game_size.0 as i32 && v.y < self.game_size.1 as i32
 			}).map(|v| self.point_to_index(v))
@@ -87,7 +88,7 @@ impl GameState {
 			let v = GRID_SIZE * Point2::new(point.x as f32, point.y as f32);
 
 			let mut params = graphics::DrawParam::new();
-			params.dest = v.into();
+			params.dest = v.convert_to();
 			
 			match self.grid[i] {
 			    SquareState::Closed(flag) => {
@@ -105,7 +106,7 @@ impl GameState {
 
 					if flag {
 						let scale = GRID_SIZE / self.flag_image.dimensions().w;
-						params.scale = Vector2::new(scale, scale).into();
+						params.scale = ggez::mint::Vector2 {x: scale, y: scale};
 						graphics::draw(ctx, &self.flag_image, params)?;
 					}
 				}
@@ -141,7 +142,7 @@ impl State for GameState {
 	}
 	
 	fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) -> ggez::GameResult<EventResult> {
-		let point = na::Vector2::<i32>::new((x / GRID_SIZE) as i32, (y / GRID_SIZE) as i32);
+		let point = cgmath::Vector2::<i32>::new((x / GRID_SIZE) as i32, (y / GRID_SIZE) as i32);
 		
 		self.mouse_index = if point.x >= 0 && point.y >= 0 && point.x < self.game_size.0 as i32 && point.y < self.game_size.1 as i32{
 			Some(self.point_to_index(point) as i32)

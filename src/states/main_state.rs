@@ -1,6 +1,5 @@
 use std::collections::VecDeque;
 use ggez::{Context, GameResult, event, graphics};
-use ggez::nalgebra as na;
 use state::EventResult;
 
 use log::error;
@@ -96,5 +95,13 @@ impl event::EventHandler for MainState {
 				}
 			}
 		}
+	}
+
+	fn mouse_button_down_event(&mut self, _ctx: &mut Context, _button: ggez::input::mouse::MouseButton, _x: f32, _y: f32) {
+		
+	}
+
+	fn mouse_button_up_event(&mut self, _ctx: &mut Context, _button: ggez::input::mouse::MouseButton, _x: f32, _y: f32) {
+		
 	}
 }

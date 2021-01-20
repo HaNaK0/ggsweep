@@ -1,11 +1,11 @@
 use std::time::Duration;
 
 use ggez::{graphics, Context, GameResult};
+
+#[allow(unused_imports)] 
 use cgmath::prelude::*;
 
 use rand::prelude::*;
-
-use log::{trace, info};
 
 use crate::state::*;
 
@@ -14,17 +14,19 @@ const SQUARE_COLOR: (u8, u8, u8) = (0, 191, 255);
 const SELECT_COLOR: (u8, u8, u8) = (100, 200, 255);
 
 type Point2 = cgmath::Point2<f32>;
-type Vector2 = cgmath::Vector2<f32>;
+//type Vector2 = cgmath::Vector2<f32>;
 
 /// The state of a square   
 /// A square can either be closed and the bool states wetehr the player has set a flag on the square
 /// or it can be open and then the number represents the number of neighboring mines
+#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 enum SquareState {
 	Closed(bool),
 	Open(u8),
 }
 
+#[allow(dead_code)]
 pub struct GameState {
 	game_size: (usize, usize),
 	grid: Vec<SquareState>,
@@ -69,6 +71,7 @@ impl GameState {
 		point.x as usize + point.y as usize * self.game_size.0
 	}
 
+	#[allow(dead_code)]
 	fn count_neighbors(& self, i : usize) -> usize {
 		let point = self.index_to_point(i);
 		(-1..1)

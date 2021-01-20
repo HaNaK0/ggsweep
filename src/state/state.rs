@@ -8,6 +8,7 @@ pub enum EventResult{
 }
 
 ///Enum returned from the update function can also tell the state stack to push or swap a state
+#[allow(dead_code)]
 pub enum UpdateResult {
 	/// Update the state below this one in the stack
 	LetThrough,
@@ -36,7 +37,7 @@ pub trait State {
 		false
 	}
 
-	fn mouse_motion_event(&mut self, ctx: &mut ggez::Context, x: f32, y: f32, dx: f32, dy: f32) -> ggez::GameResult<EventResult> {
+	fn mouse_motion_event(&mut self, _ctx: &mut ggez::Context, _x: f32, _y: f32, _dx: f32, _dy: f32) -> ggez::GameResult<EventResult> {
 		Ok(EventResult::LetThrough)
 	}
 }

@@ -287,6 +287,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a98d30140e3296250832bbaaff83b27dcd6fa3cc70fb6f1f3e5c9c0023b5317"
 dependencies = [
  "approx 0.4.0",
+ "mint",
  "num-traits 0.2.14",
 ]
 
@@ -735,6 +736,7 @@ dependencies = [
  "cgmath",
  "ggez",
  "log",
+ "mint",
  "rand 0.8.1",
  "simple_logger",
 ]

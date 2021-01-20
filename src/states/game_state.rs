@@ -8,7 +8,6 @@ use rand::prelude::*;
 use log::{trace, info};
 
 use crate::state::*;
-use crate::convert::*;
 
 const GRID_SIZE: f32 = 32.0;
 const SQUARE_COLOR: (u8, u8, u8) = (0, 191, 255);
@@ -88,7 +87,7 @@ impl GameState {
 			let v = GRID_SIZE * Point2::new(point.x as f32, point.y as f32);
 
 			let mut params = graphics::DrawParam::new();
-			params.dest = v.convert_to();
+			params.dest = v.into();
 			
 			match self.grid[i] {
 			    SquareState::Closed(flag) => {

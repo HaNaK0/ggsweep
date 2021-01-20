@@ -11,4 +11,5 @@ ggez = "0.5.1"
 log = "0.4"
 simple_logger = "1.11.0"
 rand = "0.8.1"
-cgmath = {version = "0.18.0", features = ["swizzle"]}
+cgmath = {version = "0.18.0", features = ["swizzle", "mint"]}
+mint = "0.5.6"

@@ -61,7 +61,7 @@ impl GameState {
 
         let rect = graphics::Rect::new(0.0, 0.0, GRID_SIZE, GRID_SIZE);
         let square =
-            graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect.clone(), color)?;
+            graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color)?;
 
         Ok(GameState {
             game_size,

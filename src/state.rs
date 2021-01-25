@@ -47,4 +47,24 @@ pub trait State {
     ) -> ggez::GameResult<EventResult> {
         Ok(EventResult::LetThrough)
     }
+
+    fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut ggez::Context,
+        _button: ggez::input::mouse::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) -> ggez::GameResult<EventResult> {
+        Ok(EventResult::LetThrough)
+    }
+
+    fn mouse_button_up_event(
+        &mut self,
+        _ctx: &mut ggez::Context,
+        _button: ggez::input::mouse::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) -> ggez::GameResult<EventResult> {
+        Ok(EventResult::LetThrough)
+    }
 }

@@ -102,19 +102,47 @@ impl event::EventHandler for MainState {
 
     fn mouse_button_down_event(
         &mut self,
-        _ctx: &mut Context,
-        _button: ggez::input::mouse::MouseButton,
-        _x: f32,
-        _y: f32,
+        ctx: &mut Context,
+        button: ggez::input::mouse::MouseButton,
+        x: f32,
+        y: f32,
     ) {
+        for state in &mut self.state_stack {
+            match state.mouse_button_down_event(ctx, button, x, y) {
+                Ok(r) => {
+                    if r == EventResult::Block {
+                        break;
+                    }
+                }
+                Err(e) => {
+                    error!("Encountered error in mouse button down: {:?}", e);
+                    self.event_result = Err(e);
+                    break;
+                }
+            }
+        }
     }
 
     fn mouse_button_up_event(
         &mut self,
-        _ctx: &mut Context,
-        _button: ggez::input::mouse::MouseButton,
-        _x: f32,
-        _y: f32,
+        ctx: &mut Context,
+        button: ggez::input::mouse::MouseButton,
+        x: f32,
+        y: f32,
     ) {
+        for state in &mut self.state_stack {
+            match state.mouse_button_up_event(ctx, button, x, y) {
+                Ok(r) => {
+                    if r == EventResult::Block {
+                        break;
+                    }
+                }
+                Err(e) => {
+                    error!("Encountered error in mouse button down: {:?}", e);
+                    self.event_result = Err(e);
+                    break;
+                }
+            }
+        }
     }
 }

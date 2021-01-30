@@ -37,6 +37,7 @@ pub trait State {
         false
     }
 
+    /// Called on the mouse moved event
     fn mouse_motion_event(
         &mut self,
         _ctx: &mut ggez::Context,
@@ -48,6 +49,7 @@ pub trait State {
         Ok(EventResult::LetThrough)
     }
 
+    /// Called from the  mouse button down event
     fn mouse_button_down_event(
         &mut self,
         _ctx: &mut ggez::Context,
@@ -58,6 +60,7 @@ pub trait State {
         Ok(EventResult::LetThrough)
     }
 
+    /// Called from the mouse button up event
     fn mouse_button_up_event(
         &mut self,
         _ctx: &mut ggez::Context,

@@ -123,6 +123,7 @@ impl event::EventHandler for MainState {
         }
     }
 
+    /// Goes through the states and calls the mouse button up event until a state blocks it
     fn mouse_button_up_event(
         &mut self,
         ctx: &mut Context,

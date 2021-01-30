@@ -4,6 +4,7 @@ use ggez::{graphics, Context, GameResult};
 
 #[allow(unused_imports)]
 use cgmath::prelude::*;
+use log::trace;
 use rand::prelude::*;
 
 use crate::state::*;
@@ -40,6 +41,7 @@ pub struct GameState {
     square: graphics::Mesh,
     timer: Duration,
     mouse_index: Option<i32>,
+    mouse_press: Option<(ggez::input::mouse::MouseButton, i32)>,
 }
 
 impl GameState {
@@ -60,8 +62,7 @@ impl GameState {
         }
 
         let rect = graphics::Rect::new(0.0, 0.0, GRID_SIZE, GRID_SIZE);
-        let square =
-            graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color)?;
+        let square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color)?;
 
         Ok(GameState {
             game_size,
@@ -71,6 +72,7 @@ impl GameState {
             square,
             timer: Duration::new(0, 0),
             mouse_index: None,
+            mouse_press: None,
         })
     }
 
@@ -108,19 +110,28 @@ impl GameState {
 
             match self.grid[i] {
                 SquareState::Closed(flag) => {
-                    if let Some(index) = self.mouse_index {
-                        params.color = if index == i as i32 {
+                    // if the mouse is pressed the square it was pressed on is the selected one
+                    // otherwise it is the square that the mouse is over
+                    params.color = if let Some((_, index)) = self.mouse_press {
+                        if index == i as i32 {
+                            SELECT_COLOR.into()
+                        } else {
+                            SQUARE_COLOR.into()
+                        }
+                    } else if let Some(index) = self.mouse_index {
+                        if index == i as i32 {
                             SELECT_COLOR.into()
                         } else {
                             SQUARE_COLOR.into()
                         }
                     } else {
-                        params.color = SQUARE_COLOR.into()
-                    }
+                        SQUARE_COLOR.into()
+                    };
 
                     graphics::draw(ctx, &self.square, params)?;
 
                     if flag {
+                        params.color = graphics::WHITE;
                         let scale = GRID_SIZE / self.flag_image.dimensions().w;
                         params.scale = ggez::mint::Vector2 { x: scale, y: scale };
                         graphics::draw(ctx, &self.flag_image, params)?;
@@ -131,32 +142,29 @@ impl GameState {
         }
         Ok(())
     }
+
+    fn open(&mut self, index: i32) {
+        self.grid[index as usize] = SquareState::Open(0)
+    }
 }
 
 impl State for GameState {
+    /// Main update
     fn update(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<UpdateResult> {
-        let dt = ggez::timer::delta(ctx);
-        self.timer += dt;
-
-        if self.timer.as_secs() > 1 {
-            let mut rng = rand::thread_rng();
-            let i = rng.gen_range(0..self.grid.len());
-
-            if let SquareState::Closed(b) = self.grid[i] {
-                self.grid[i] = SquareState::Closed(!b)
-            }
-
-            self.timer = Duration::new(0, 0);
-        }
+        //update delta time
+        let _dt = ggez::timer::delta(ctx);
 
         Ok(UpdateResult::Block)
     }
 
+    ///Draw the playing grid
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<()> {
         self.draw_squares(ctx)?;
         Ok(())
     }
 
+    /// When the mouse is moved we update to the mouse index to the index of the square
+    /// which the mouse is currently over
     fn mouse_motion_event(
         &mut self,
         _ctx: &mut Context,
@@ -165,8 +173,10 @@ impl State for GameState {
         _dx: f32,
         _dy: f32,
     ) -> ggez::GameResult<EventResult> {
+        // Convert the mouse position to a position in the playing grid
         let point = cgmath::Vector2::<i32>::new((x / GRID_SIZE) as i32, (y / GRID_SIZE) as i32);
 
+        // Update the mouse index
         self.mouse_index = if point.x >= 0
             && point.y >= 0
             && point.x < self.game_size.0 as i32
@@ -177,6 +187,53 @@ impl State for GameState {
             None
         };
 
+        Ok(EventResult::Block)
+    }
+
+    fn mouse_button_up_event(
+        &mut self,
+        _ctx: &mut ggez::Context,
+        button: ggez::input::mouse::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) -> ggez::GameResult<EventResult> {
+        // Get and unwrap mouse press and mouse index
+        if let (Some((press_button, press_index)), Some(mouse_index)) =
+            (self.mouse_press, self.mouse_index)
+        {
+            // If the mouse is released on the same square it was pressed it will active click
+            if button == press_button && mouse_index == press_index {
+                trace!("Mouse pressed on index {:?}", mouse_index);
+                match button {
+                    ggez::event::MouseButton::Left => self.open(press_index),
+                    ggez::event::MouseButton::Right => {
+                        // If right button is pressed we toggle the flag
+                        if let SquareState::Closed(flagged) = self.grid[press_index as usize] {
+                            self.grid[press_index as usize] = SquareState::Closed(!flagged)
+                        }
+                    }
+                    ggez::event::MouseButton::Middle => {}
+                    ggez::event::MouseButton::Other(_) => {}
+                }
+            }
+        }
+
+        self.mouse_press = None;
+
+        Ok(EventResult::Block)
+    }
+
+    fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut ggez::Context,
+        button: ggez::input::mouse::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) -> ggez::GameResult<EventResult> {
+        // When a mouse button is pressed set the mouse press to the button and index of the square the mouse is over
+        if let Some(index) = self.mouse_index {
+            self.mouse_press = Some((button, index))
+        }
         Ok(EventResult::Block)
     }
 }

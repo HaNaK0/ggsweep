@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{collections, time::Duration};
 
 use ggez::{graphics, Context, GameResult};
 
@@ -13,14 +13,20 @@ use crate::state::*;
 ///The size of every grid square in pixels
 const GRID_SIZE: f32 = 32.0;
 
+/// Number of mines - to be moved to config
+const NUMBER_OF_MINES: usize = 10;
+
 /// The color of a square
 const SQUARE_COLOR: (u8, u8, u8) = (0, 191, 255);
 /// The color of a square when the mouse hovers over it
 const SELECT_COLOR: (u8, u8, u8) = (100, 200, 255);
+/// The color of square with a mine
+const MINE_COLOR: (u8, u8, u8) = (255, 50, 50);
 
 //Types
 type Point2 = cgmath::Point2<f32>;
 //type Vector2 = cgmath::Vector2<f32>;
+type IndexType = usize;
 
 /// The state of a square   
 /// A square can either be closed and the bool states wetehr the player has set a flag on the square
@@ -40,26 +46,17 @@ pub struct GameState {
     flag_image: graphics::Image,
     square: graphics::Mesh,
     timer: Duration,
-    mouse_index: Option<i32>,
-    mouse_press: Option<(ggez::input::mouse::MouseButton, i32)>,
+    mouse_index: Option<IndexType>,
+    mouse_press: Option<(ggez::input::mouse::MouseButton, IndexType)>,
 }
 
 impl GameState {
-    pub fn new(
-        ctx: &mut Context,
-        game_size: (usize, usize),
-        number_of_mines: usize,
-    ) -> GameResult<Self> {
+    pub fn new(ctx: &mut Context, game_size: (usize, usize)) -> GameResult<Self> {
         let grid = vec![SquareState::Closed(false); game_size.0 * game_size.1];
-        let mut mines = std::collections::HashSet::<usize>::new();
-        let mut rng = rand::thread_rng();
+        let mines = std::collections::HashSet::<usize>::new();
 
         let flag_image = graphics::Image::new(ctx, "\\flag.png")?;
         let color = graphics::WHITE;
-
-        while mines.len() < number_of_mines {
-            mines.insert(rng.gen_range(0..grid.len()));
-        }
 
         let rect = graphics::Rect::new(0.0, 0.0, GRID_SIZE, GRID_SIZE);
         let square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color)?;
@@ -84,20 +81,25 @@ impl GameState {
         point.x as usize + point.y as usize * self.game_size.0
     }
 
-    #[allow(dead_code)]
-    fn count_neighbors(&self, i: usize) -> usize {
+    fn count_neighbors(&self, i: usize) -> u8 {
         let point = self.index_to_point(i);
-        (-1..1)
-            .map(|i| point + cgmath::Vector2::new(i, 1 - i))
-            .filter(|v| {
-                v.x >= 0
-                    && v.y >= 0
-                    && v.x < self.game_size.0 as i32
-                    && v.y < self.game_size.1 as i32
-            })
-            .map(|v| self.point_to_index(v))
-            .filter(|i| self.mines.contains(i))
-            .count()
+        let mut count = 0;
+        //Loop through all neighbors
+        for x in -1..1 {
+            for y in -1..1 {
+                //Skip the middle
+                if x == 0 && y == 0 {
+                    continue;
+                }
+
+                let current_point = point + cgmath::vec2(x, y);
+                if self.mines.contains(&self.point_to_index(current_point)) {
+                    count += 1;
+                }
+            }
+        }
+
+        count
     }
 
     fn draw_squares(&self, ctx: &mut ggez::Context) -> GameResult<()> {
@@ -113,17 +115,19 @@ impl GameState {
                     // if the mouse is pressed the square it was pressed on is the selected one
                     // otherwise it is the square that the mouse is over
                     params.color = if let Some((_, index)) = self.mouse_press {
-                        if index == i as i32 {
+                        if index == i {
                             SELECT_COLOR.into()
                         } else {
                             SQUARE_COLOR.into()
                         }
                     } else if let Some(index) = self.mouse_index {
-                        if index == i as i32 {
+                        if index == i {
                             SELECT_COLOR.into()
                         } else {
                             SQUARE_COLOR.into()
                         }
+                    } else if self.mines.contains(&i) {
+                        MINE_COLOR.into()
                     } else {
                         SQUARE_COLOR.into()
                     };
@@ -143,8 +147,34 @@ impl GameState {
         Ok(())
     }
 
-    fn open(&mut self, index: i32) {
-        self.grid[index as usize] = SquareState::Open(0)
+    /// Opens a square and checks the ammount of neighboring mines   
+    /// If mines aren't generated it will generate them first
+    fn open(&mut self, index: IndexType) {
+        if self.mines.is_empty() {
+            self.generate_mines(NUMBER_OF_MINES, index);
+        }
+
+        self.grid[index] = SquareState::Open(self.count_neighbors(index));
+    }
+
+    fn generate_mines(&mut self, number_of_mines: IndexType, graced_index: IndexType) {
+        let mut rng = rand::thread_rng();
+        let dist = rand::distributions::Uniform::new(0, self.grid.len());
+
+        let mut result = collections::HashSet::new();
+
+        let mut tries = 0;
+        while result.len() < number_of_mines {
+            let next = dist.sample(&mut rng);
+
+            if next != graced_index {
+                result.insert(next);
+            }
+            tries += 1;
+        }
+
+        trace!("Mines generated at {:?} after {} tries", result, tries);
+        self.mines = result;
     }
 }
 
@@ -157,7 +187,7 @@ impl State for GameState {
         Ok(UpdateResult::Block)
     }
 
-    ///Draw the playing grid
+    /// Draw the playing grid
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<()> {
         self.draw_squares(ctx)?;
         Ok(())
@@ -182,7 +212,7 @@ impl State for GameState {
             && point.x < self.game_size.0 as i32
             && point.y < self.game_size.1 as i32
         {
-            Some(self.point_to_index(point) as i32)
+            Some(self.point_to_index(point))
         } else {
             None
         };

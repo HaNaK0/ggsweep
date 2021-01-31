@@ -33,7 +33,7 @@ fn main() -> GameResult {
 
     info!("{}", graphics::renderer_info(ctx)?);
 
-    let initial_state = Box::new(GameState::new(ctx, (10, 10), 5)?);
+    let initial_state = Box::new(GameState::new(ctx, (10, 10))?);
     let state = &mut MainState::new(initial_state, graphics::Color::from_rgb(38, 38, 38))?;
 
     event::run(ctx, events_loop, state)

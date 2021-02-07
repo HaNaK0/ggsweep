@@ -9,20 +9,6 @@ use rand::prelude::*;
 
 use crate::{game_config::GameConfig, state::*};
 
-//Constants
-///The size of every grid square in pixels
-const GRID_SIZE: f32 = 32.0;
-
-/// Number of mines - to be moved to config
-const NUMBER_OF_MINES: usize = 10;
-
-/// The color of a square
-const SQUARE_COLOR: (u8, u8, u8) = (0, 191, 255);
-/// The color of a square when the mouse hovers over it
-const SELECT_COLOR: (u8, u8, u8) = (100, 200, 255);
-/// The color of square with a mine
-const MINE_COLOR: (u8, u8, u8) = (255, 50, 50);
-
 //Types
 type Point2 = cgmath::Point2<f32>;
 //type Vector2 = cgmath::Vector2<f32>;
@@ -59,7 +45,7 @@ impl GameState {
         let flag_image = graphics::Image::new(ctx, "\\flag.png")?;
         let color = graphics::WHITE;
 
-        let rect = graphics::Rect::new(0.0, 0.0, GRID_SIZE, GRID_SIZE);
+        let rect = graphics::Rect::new(0.0, 0.0, game_config.square_size, game_config.square_size);
         let square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color)?;
 
         Ok(GameState {
@@ -107,9 +93,11 @@ impl GameState {
     }
 
     fn draw_squares(&self, ctx: &mut ggez::Context) -> GameResult<()> {
+        let colors = &self.game_config.colors;
+
         for i in 0..self.grid.len() {
             let point = self.index_to_point(i);
-            let v = GRID_SIZE * Point2::new(point.x as f32, point.y as f32);
+            let v = self.game_config.square_size * Point2::new(point.x as f32, point.y as f32);
 
             let mut params = graphics::DrawParam::new();
             params.dest = v.into();
@@ -120,27 +108,27 @@ impl GameState {
                     // otherwise it is the square that the mouse is over
                     params.color = if let Some((_, index)) = self.mouse_press {
                         if index == i {
-                            SELECT_COLOR.into()
+                            colors.selected_square.into()
                         } else {
-                            SQUARE_COLOR.into()
+                            colors.square.into()
                         }
                     } else if let Some(index) = self.mouse_index {
                         if index == i {
-                            SELECT_COLOR.into()
+                            colors.selected_square.into()
                         } else {
-                            SQUARE_COLOR.into()
+                            colors.square.into()
                         }
                     } else if self.mines.contains(&i) {
-                        MINE_COLOR.into()
+                        colors.mine_square.into()
                     } else {
-                        SQUARE_COLOR.into()
+                        colors.square.into()
                     };
 
                     graphics::draw(ctx, &self.square, params)?;
 
                     if flag {
                         params.color = graphics::WHITE;
-                        let scale = GRID_SIZE / self.flag_image.dimensions().w;
+                        let scale = self.game_config.square_size / self.flag_image.dimensions().w;
                         params.scale = ggez::mint::Vector2 { x: scale, y: scale };
                         graphics::draw(ctx, &self.flag_image, params)?;
                     }
@@ -155,7 +143,7 @@ impl GameState {
     /// If mines aren't generated it will generate them first
     fn open(&mut self, index: IndexType) {
         if self.mines.is_empty() {
-            self.generate_mines(NUMBER_OF_MINES, index);
+            self.generate_mines(self.game_config.number_of_mines, index);
         }
 
         self.grid[index] = SquareState::Open(self.count_neighbors(index));
@@ -208,7 +196,10 @@ impl State for GameState {
         _dy: f32,
     ) -> ggez::GameResult<EventResult> {
         // Convert the mouse position to a position in the playing grid
-        let point = cgmath::Vector2::<i32>::new((x / GRID_SIZE) as i32, (y / GRID_SIZE) as i32);
+        let point = cgmath::Vector2::<i32>::new(
+            (x / self.game_config.square_size) as i32,
+            (y / self.game_config.square_size) as i32,
+        );
 
         // Update the mouse index
         self.mouse_index = if point.x >= 0

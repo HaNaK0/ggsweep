@@ -11,7 +11,7 @@ pub struct GameColors {
 #[derive(Deserialize, Debug)]
 pub struct GameConfig {
     pub game_size: (usize, usize),
-    pub number_of_mines: u32,
+    pub number_of_mines: usize,
     pub square_size: f32,
     pub colors: GameColors,
 }

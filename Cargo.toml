@@ -13,3 +13,5 @@ simple_logger = "1.11.0"
 rand = "0.8.1"
 cgmath = {version = "0.18.0", features = ["swizzle", "mint"]}
 mint = "0.5.6"
+ron = "0.6.4"
+serde = "1.0.123"

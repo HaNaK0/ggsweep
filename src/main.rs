@@ -1,14 +1,17 @@
 use std::{env, path};
 
-use ggez::{event, graphics, ContextBuilder, GameResult};
+use error::Error;
+use ggez::{event, graphics, ContextBuilder};
 use log::info;
 
 mod states;
 use states::{GameState, MainState};
 
+mod error;
+mod game_config;
 mod state;
 
-fn main() -> GameResult {
+fn main() -> Result<(), error::Error> {
     // Start the logger
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Warn)
@@ -29,12 +32,20 @@ fn main() -> GameResult {
 
     let cb = ContextBuilder::new("Mine Sweeper", "HaNaK0").add_resource_path(resuource_dir);
 
-    let (ctx, events_loop) = &mut cb.build()?;
+    let (ctx, events_loop) = &mut cb.build().map_err(Error::GameError)?;
 
-    info!("{}", graphics::renderer_info(ctx)?);
+    info!(
+        "{}",
+        graphics::renderer_info(ctx).map_err(Error::GameError)?
+    );
 
-    let initial_state = Box::new(GameState::new(ctx, (10, 10))?);
-    let state = &mut MainState::new(initial_state, graphics::Color::from_rgb(38, 38, 38))?;
+    let game_config_file = ggez::filesystem::open(ctx, "\\config.ron").map_err(Error::GameError)?;
+    let game_config =
+        game_config::GameConfig::load_from_file(game_config_file).map_err(Error::RonError)?;
 
-    event::run(ctx, events_loop, state)
+    let initial_state = Box::new(GameState::new(ctx, game_config).map_err(Error::GameError)?);
+    let state = &mut MainState::new(initial_state, graphics::Color::from_rgb(38, 38, 38))
+        .map_err(Error::GameError)?;
+
+    event::run(ctx, events_loop, state).map_err(Error::GameError)
 }

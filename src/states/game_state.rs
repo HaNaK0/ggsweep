@@ -7,7 +7,7 @@ use cgmath::prelude::*;
 use log::trace;
 use rand::prelude::*;
 
-use crate::state::*;
+use crate::{game_config::GameConfig, state::*};
 
 //Constants
 ///The size of every grid square in pixels
@@ -40,7 +40,7 @@ enum SquareState {
 
 #[allow(dead_code)]
 pub struct GameState {
-    game_size: (usize, usize),
+    game_config: GameConfig,
     grid: Vec<SquareState>,
     mines: std::collections::HashSet<usize>,
     flag_image: graphics::Image,
@@ -51,8 +51,9 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn new(ctx: &mut Context, game_size: (usize, usize)) -> GameResult<Self> {
-        let grid = vec![SquareState::Closed(false); game_size.0 * game_size.1];
+    pub fn new(ctx: &mut Context, game_config: GameConfig) -> GameResult<Self> {
+        let grid =
+            vec![SquareState::Closed(false); game_config.game_size.0 * game_config.game_size.1];
         let mines = std::collections::HashSet::<usize>::new();
 
         let flag_image = graphics::Image::new(ctx, "\\flag.png")?;
@@ -62,7 +63,7 @@ impl GameState {
         let square = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color)?;
 
         Ok(GameState {
-            game_size,
+            game_config,
             grid,
             mines,
             flag_image,
@@ -74,11 +75,14 @@ impl GameState {
     }
 
     fn index_to_point(&self, i: usize) -> cgmath::Vector2<i32> {
-        cgmath::Vector2::new((i % self.game_size.0) as i32, (i / self.game_size.0) as i32)
+        cgmath::Vector2::new(
+            (i % self.game_config.game_size.0) as i32,
+            (i / self.game_config.game_size.0) as i32,
+        )
     }
 
     fn point_to_index(&self, point: cgmath::Vector2<i32>) -> usize {
-        point.x as usize + point.y as usize * self.game_size.0
+        point.x as usize + point.y as usize * self.game_config.game_size.0
     }
 
     fn count_neighbors(&self, i: usize) -> u8 {
@@ -209,8 +213,8 @@ impl State for GameState {
         // Update the mouse index
         self.mouse_index = if point.x >= 0
             && point.y >= 0
-            && point.x < self.game_size.0 as i32
-            && point.y < self.game_size.1 as i32
+            && point.x < self.game_config.game_size.0 as i32
+            && point.y < self.game_config.game_size.1 as i32
         {
             Some(self.point_to_index(point))
         } else {

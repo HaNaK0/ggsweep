@@ -1,4 +1,4 @@
-use std::{collections, time::Duration};
+use std::collections;
 
 use ggez::{graphics, Context, GameResult};
 
@@ -17,21 +17,19 @@ type IndexType = usize;
 /// The state of a square   
 /// A square can either be closed and the bool states wetehr the player has set a flag on the square
 /// or it can be open and then the number represents the number of neighboring mines
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 enum SquareState {
     Closed(bool),
     Open(u8),
 }
 
-#[allow(dead_code)]
+//#[allow(dead_code)]
 pub struct GameState {
     game_config: GameConfig,
     grid: Vec<SquareState>,
     mines: std::collections::HashSet<usize>,
     flag_image: graphics::Image,
     square: graphics::Mesh,
-    timer: Duration,
     mouse_index: Option<IndexType>,
     mouse_press: Option<(ggez::input::mouse::MouseButton, IndexType)>,
 }
@@ -54,7 +52,6 @@ impl GameState {
             mines,
             flag_image,
             square,
-            timer: Duration::new(0, 0),
             mouse_index: None,
             mouse_press: None,
         })

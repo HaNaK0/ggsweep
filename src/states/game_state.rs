@@ -7,7 +7,7 @@ use cgmath::prelude::*;
 use log::trace;
 use rand::prelude::*;
 
-use crate::{game_config::GameConfig, state::*};
+use crate::{config::GameConfig, state::*};
 
 //Types
 type Point2 = cgmath::Point2<f32>;

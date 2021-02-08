@@ -8,7 +8,7 @@ mod states;
 use states::{GameState, MainState};
 
 mod error;
-mod game_config;
+mod config;
 mod state;
 
 fn main() -> Result<(), error::Error> {
@@ -41,7 +41,7 @@ fn main() -> Result<(), error::Error> {
 
     let game_config_file = ggez::filesystem::open(ctx, "\\config.ron").map_err(Error::GameError)?;
     let game_config =
-        game_config::GameConfig::load_from_file(game_config_file).map_err(Error::RonError)?;
+        config::GameConfig::load_from_file(game_config_file).map_err(Error::RonError)?;
 
     let initial_state = Box::new(GameState::new(ctx, game_config).map_err(Error::GameError)?);
     let state = &mut MainState::new(initial_state, graphics::Color::from_rgb(38, 38, 38))

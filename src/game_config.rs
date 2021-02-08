@@ -1,6 +1,7 @@
-use ron::{de::from_reader, Error};
+use ron::de;
 use serde::Deserialize;
 
+/// A struct containing the colors used in the game
 #[derive(Deserialize, Debug)]
 pub struct GameColors {
     pub square: (u8, u8, u8),
@@ -8,6 +9,7 @@ pub struct GameColors {
     pub mine_square: (u8, u8, u8),
 }
 
+///The main game config struct loaded fomr config.ron in resources
 #[derive(Deserialize, Debug)]
 pub struct GameConfig {
     pub game_size: (usize, usize),
@@ -17,7 +19,11 @@ pub struct GameConfig {
 }
 
 impl GameConfig {
-    pub fn load_from_file(file: ggez::filesystem::File) -> Result<GameConfig, Error> {
-        from_reader(file)
+    /// Load the game config from a reader
+    pub fn load_from_file<R>(file: R) -> Result<GameConfig, ron::Error>
+    where
+        R: std::io::Read,
+    {
+        de::from_reader(file)
     }
 }

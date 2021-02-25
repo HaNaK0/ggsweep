@@ -1,4 +1,3 @@
-use ron::de;
 use serde::Deserialize;
 
 /// A struct containing the colors used in the game
@@ -16,14 +15,4 @@ pub struct GameConfig {
     pub number_of_mines: usize,
     pub square_size: f32,
     pub colors: GameColors,
-}
-
-impl GameConfig {
-    /// Load the game config from a reader
-    pub fn load_from_file<R>(file: R) -> Result<GameConfig, ron::Error>
-    where
-        R: std::io::Read,
-    {
-        de::from_reader(file)
-    }
 }

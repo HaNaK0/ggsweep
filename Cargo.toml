@@ -3,6 +3,7 @@ name = "ggsweep"
 version = "0.1.0"
 authors = ["HaNaK0 <saturn-v@hotmail.com>"]
 edition = "2018"
+default-run = "ggsweep"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -1,10 +1,9 @@
 use ggez::{event, graphics, Context, GameResult};
-use state::EventResult;
 use std::collections::VecDeque;
 
 use log::error;
 
-use crate::state;
+use crate::state::{self ,EventResult};
 
 /// The main state that contains all other states in a state stack
 pub struct MainState {

@@ -1,7 +1,7 @@
 use ggez::{event, graphics, Context, GameResult};
 use std::collections::VecDeque;
 
-use log::error;
+use log::{error, info};
 
 use crate::state::{self ,EventResult};
 
@@ -53,6 +53,12 @@ impl event::EventHandler for MainState {
                 }
                 state::UpdateResult::Pop => {
                     self.state_stack.pop_front();
+                    
+                    if self.state_stack.is_empty() {
+                        info!("no states left");
+                        ggez::event::quit(ctx)
+                    }
+
                     break;
                 }
             }
@@ -62,6 +68,10 @@ impl event::EventHandler for MainState {
     }
 
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult {
+        if self.state_stack.is_empty() {
+            return Ok(());
+        }
+
         let mut index = 0;
 
         for i in 1..self.state_stack.len() {

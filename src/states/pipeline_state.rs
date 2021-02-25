@@ -98,13 +98,16 @@ impl PipelineState {
 	fn save(&mut self, ctx: &mut ggez::Context) -> GameResult<()> {
 		if let Some(number_render) = &self.number_render {
 			let image = &number_render.canvas.image();
+
+            info!("Rendering to: {}", self.target_path);
 			image.encode(ctx, graphics::ImageFormat::Png, &self.target_path)?;
 			self.progress = GenProgress::Done;
 		} else {
 			error!("{}, {}: No number_render at pipeline save. Can't save nothing", file!(), line!());
 			return Err(ggez::GameError::RenderError("Missing number_render".to_string()));
 		}
-		todo!()
+
+        Ok(())
 	}
 }
 

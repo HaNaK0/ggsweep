@@ -1,5 +1,6 @@
 use serde::Deserialize;
 
+/// # Game Colors
 /// A struct containing the colors used in the game
 #[derive(Deserialize, Debug, Clone)]
 pub struct GameColors {
@@ -8,7 +9,8 @@ pub struct GameColors {
     pub mine_square: (u8, u8, u8),
 }
 
-///The main game config struct loaded fomr config.ron in resources
+/// # Game Config
+/// The main game config struct loaded fomr config.ron in resources
 #[derive(Deserialize, Debug, Clone)]
 pub struct GameConfig {
     pub game_size: (usize, usize),

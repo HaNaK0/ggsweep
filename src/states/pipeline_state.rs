@@ -10,7 +10,8 @@ use crate::{
     state::{State, UpdateResult},
 };
 
-/// Current progress in generation
+/// # Gen Progress
+/// An enum used to keep track on what the pipeline is currently doing
 enum GenProgress {
     Setup,
     Draw,
@@ -18,7 +19,10 @@ enum GenProgress {
     Done,
 }
 
-///A pipeline state
+/// # Pipeline State
+/// A state that will go through assets that needs to transformed before it
+/// be used in game   
+/// For ggsweep it will generate the sprite used for the numbers
 pub struct PipelineState {
     game_config: GameConfig,
     font: ggez::graphics::Font,
@@ -29,12 +33,17 @@ pub struct PipelineState {
     number_render: Option<NumberRender>,
 }
 
+
+/// # Number render
+/// A struct that contains the information needed for prerendering text to a canvas
 struct NumberRender {
     canvas: graphics::Canvas,
     text: Vec::<graphics::Text>,
 }
 
 impl PipelineState {
+    /// # New
+    /// Create a new pipeline state
     pub fn new(gen_conf_path: &str, ctx: &mut ggez::Context) -> Result<PipelineState, LocatedError> {
         info!("Pipline load stated");
         let load_start = timer::time_since_start(ctx);
@@ -65,6 +74,8 @@ impl PipelineState {
         })
     }
 
+    /// # Setup
+    /// Create stuff needed for rendering
     fn setup(&mut self, ctx: &mut ggez::Context) -> GameResult<()> {
 		info!("Pipline started");
 		self.timer = timer::time_since_start(ctx);
@@ -95,6 +106,8 @@ impl PipelineState {
         Ok(())
     }
 
+    /// # Save
+    /// Save stuff that should be saved to a file
 	fn save(&mut self, ctx: &mut ggez::Context) -> GameResult<()> {
 		if let Some(number_render) = &self.number_render {
 			let image = &number_render.canvas.image();
@@ -112,6 +125,12 @@ impl PipelineState {
 }
 
 impl State for PipelineState {
+    /// # Update
+    /// Update does different things depending on the gen progress
+    /// - If ```progress``` is Setup it runs the ```setup``` method 
+    /// - If ```progress``` is Draw it does nothing
+    /// - If ```progress``` is Save it runs the ```save``` method that saves the result to file
+    /// - If ```progress``` is Done it cleans up and then returns pop
     fn update(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<UpdateResult> {
         match self.progress {
             GenProgress::Setup => {
@@ -131,6 +150,8 @@ impl State for PipelineState {
         }
     }
 
+    /// # Draw
+    /// Runs drawing functions that draws to canvas that later gets saved
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<()> {
 		if let (GenProgress::Draw, Some(n_render)) = (&self.progress, &self.number_render) {
 			graphics::set_canvas(ctx, Some(&n_render.canvas));

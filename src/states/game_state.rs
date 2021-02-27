@@ -10,10 +10,14 @@ use rand::prelude::*;
 use crate::{config::GameConfig, state::*};
 
 //Types
+/// # Point2
+/// Used for points
 type Point2 = cgmath::Point2<f32>;
-//type Vector2 = cgmath::Vector2<f32>;
+/// # Index Type
+/// The type used for indecies
 type IndexType = usize;
 
+/// # Square State
 /// The state of a square   
 /// A square can either be closed and the bool states wetehr the player has set a flag on the square
 /// or it can be open and then the number represents the number of neighboring mines
@@ -22,8 +26,8 @@ enum SquareState {
     Closed(bool),
     Open(u8),
 }
-
-//#[allow(dead_code)]
+/// # Game State
+/// The main game state that runs the game
 pub struct GameState {
     game_config: GameConfig,
     grid: Vec<SquareState>,
@@ -35,6 +39,8 @@ pub struct GameState {
 }
 
 impl GameState {
+    /// # New
+    /// create a new game state
     pub fn new(ctx: &mut Context, game_config: GameConfig) -> GameResult<Self> {
         let grid =
             vec![SquareState::Closed(false); game_config.game_size.0 * game_config.game_size.1];
@@ -57,17 +63,30 @@ impl GameState {
         })
     }
 
-    fn index_to_point(&self, i: usize) -> cgmath::Vector2<i32> {
+    /// # Index To Point
+    /// Converts from a linear index to a 2 demensional point.   
+    /// 
+    /// returns:   
+    /// x = index % game width   
+    /// y = index / game width
+    fn index_to_point(&self, i: IndexType) -> cgmath::Vector2<i32> {
         cgmath::Vector2::new(
             (i % self.game_config.game_size.0) as i32,
             (i / self.game_config.game_size.0) as i32,
         )
     }
 
+    /// # Point To Index 
+    /// convert from a point to a index
+    ///   
+    /// returns:   
+    /// x + y * game width
     fn point_to_index(&self, point: cgmath::Vector2<i32>) -> usize {
         point.x as usize + point.y as usize * self.game_config.game_size.0
     }
 
+    /// # Count neighbors
+    /// Counts the amount of neigboring squares with mines
     fn count_neighbors(&self, i: usize) -> u8 {
         let point = self.index_to_point(i);
         let mut count = 0;
@@ -89,6 +108,8 @@ impl GameState {
         count
     }
 
+    /// # Draw Squares
+    /// Draw the squares
     fn draw_squares(&self, ctx: &mut ggez::Context) -> GameResult<()> {
         let colors = &self.game_config.colors;
 
@@ -136,6 +157,7 @@ impl GameState {
         Ok(())
     }
 
+    /// # Open
     /// Opens a square and checks the ammount of neighboring mines   
     /// If mines aren't generated it will generate them first
     fn open(&mut self, index: IndexType) {
@@ -146,6 +168,8 @@ impl GameState {
         self.grid[index] = SquareState::Open(self.count_neighbors(index));
     }
 
+    /// # Generate mines 
+    /// Generate mines in random slots
     fn generate_mines(&mut self, number_of_mines: IndexType, graced_index: IndexType) {
         let mut rng = rand::thread_rng();
         let dist = rand::distributions::Uniform::new(0, self.grid.len());
@@ -168,6 +192,7 @@ impl GameState {
 }
 
 impl State for GameState {
+    /// # Update
     /// Main update
     fn update(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<UpdateResult> {
         //update delta time
@@ -176,12 +201,14 @@ impl State for GameState {
         Ok(UpdateResult::Block)
     }
 
+    /// # Draw
     /// Draw the playing grid
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<()> {
         self.draw_squares(ctx)?;
         Ok(())
     }
 
+    /// # Mouse Motion Event
     /// When the mouse is moved we update to the mouse index to the index of the square
     /// which the mouse is currently over
     fn mouse_motion_event(
@@ -212,6 +239,9 @@ impl State for GameState {
         Ok(EventResult::Block)
     }
 
+    /// # Mouse Button Up Event
+    /// Triggered when the mouse is released and is the end of a mouse press.   
+    /// If the mouse is released on the same square as it was pressed it will call ```open```
     fn mouse_button_up_event(
         &mut self,
         _ctx: &mut ggez::Context,
@@ -245,6 +275,9 @@ impl State for GameState {
         Ok(EventResult::Block)
     }
 
+    /// # Mouse Button Down Event
+    /// Triggerd when the mousebutton is pressed down.   
+    /// Saves which square the mouse was over when the button was pressed.
     fn mouse_button_down_event(
         &mut self,
         _ctx: &mut ggez::Context,

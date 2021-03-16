@@ -65,7 +65,7 @@ impl GameState {
 
     /// # Index To Point
     /// Converts from a linear index to a 2 demensional point.   
-    /// 
+    ///
     /// returns:   
     /// x = index % game width   
     /// y = index / game width
@@ -76,7 +76,7 @@ impl GameState {
         )
     }
 
-    /// # Point To Index 
+    /// # Point To Index
     /// convert from a point to a index
     ///   
     /// returns:   
@@ -168,7 +168,7 @@ impl GameState {
         self.grid[index] = SquareState::Open(self.count_neighbors(index));
     }
 
-    /// # Generate mines 
+    /// # Generate mines
     /// Generate mines in random slots
     fn generate_mines(&mut self, number_of_mines: IndexType, graced_index: IndexType) {
         let mut rng = rand::thread_rng();

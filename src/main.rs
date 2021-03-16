@@ -1,7 +1,7 @@
 use std::{env, path};
 
-use ggsweep::{err_here, error::LocatedError};
 use ggez::{event, graphics, ContextBuilder};
+use ggsweep::{err_here, error::LocatedError};
 use log::info;
 
 use ggsweep::states::{GameState, MainState};
@@ -29,10 +29,7 @@ fn main() -> Result<(), LocatedError> {
 
     let (ctx, events_loop) = &mut cb.build().map_err(err_here!())?;
 
-    info!(
-        "{}",
-        graphics::renderer_info(ctx).map_err(err_here!())?
-    );
+    info!("{}", graphics::renderer_info(ctx).map_err(err_here!())?);
 
     let game_config_file = ggez::filesystem::open(ctx, "\\config.ron").map_err(err_here!())?;
     let game_config = ron::de::from_reader(game_config_file).map_err(err_here!())?;

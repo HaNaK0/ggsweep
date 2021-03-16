@@ -1,13 +1,13 @@
 use std::time::Duration;
 
-use ggez::{GameResult, conf, filesystem, graphics, timer};
-use log::{info, error};
+use ggez::{conf, filesystem, graphics, input::keyboard, timer, GameResult};
+use log::{error, info};
 
 use crate::{
     config::{GameConfig, PipelineConfig},
-    error::LocatedError,
     err_here,
-    state::{State, UpdateResult},
+    error::LocatedError,
+    state::{EventResult, State, UpdateResult},
 };
 
 /// # Gen Progress
@@ -15,9 +15,12 @@ use crate::{
 enum GenProgress {
     Setup,
     Draw,
+    Show,
     Save,
     Done,
 }
+
+const PAUSE: bool = true;
 
 /// # Pipeline State
 /// A state that will go through assets that needs to transformed before it
@@ -26,38 +29,39 @@ enum GenProgress {
 pub struct PipelineState {
     game_config: GameConfig,
     font: ggez::graphics::Font,
-	text_size: f32,
+    text_size: f32,
     target_path: String,
     progress: GenProgress,
     timer: Duration,
     number_render: Option<NumberRender>,
 }
 
-
 /// # Number render
 /// A struct that contains the information needed for prerendering text to a canvas
 struct NumberRender {
     canvas: graphics::Canvas,
-    text: Vec::<graphics::Text>,
+    text: Vec<graphics::Text>,
 }
 
 impl PipelineState {
     /// # New
     /// Create a new pipeline state
-    pub fn new(gen_conf_path: &str, ctx: &mut ggez::Context) -> Result<PipelineState, LocatedError> {
+    pub fn new(
+        gen_conf_path: &str,
+        ctx: &mut ggez::Context,
+    ) -> Result<PipelineState, LocatedError> {
         info!("Pipline load stated");
         let load_start = timer::time_since_start(ctx);
 
         let rdr = filesystem::open(ctx, gen_conf_path).map_err(err_here!())?;
         let pipe_config: PipelineConfig = ron::de::from_reader(rdr).unwrap();
 
-        let rdr =
-            filesystem::open(ctx, &pipe_config.game_config_path).map_err(err_here!())?;
+        let rdr = filesystem::open(ctx, &pipe_config.game_config_path).map_err(err_here!())?;
         let game_config = ron::de::from_reader(rdr).unwrap();
 
         let font = graphics::Font::new(ctx, pipe_config.font).map_err(err_here!())?;
         let target = pipe_config.target;
-		let text_size = pipe_config.size;
+        let text_size = pipe_config.size;
 
         let load_end = timer::time_since_start(ctx);
         let time: Duration = load_end - load_start;
@@ -66,7 +70,7 @@ impl PipelineState {
         Ok(PipelineState {
             game_config,
             font,
-			text_size,
+            text_size,
             target_path: target,
             progress: GenProgress::Setup,
             timer: Duration::default(),
@@ -77,8 +81,8 @@ impl PipelineState {
     /// # Setup
     /// Create stuff needed for rendering
     fn setup(&mut self, ctx: &mut ggez::Context) -> GameResult<()> {
-		info!("Pipline started");
-		self.timer = timer::time_since_start(ctx);
+        info!("Pipline started");
+        self.timer = timer::time_since_start(ctx);
 
         let canvas_size = self.game_config.square_size * 3.0;
         info!("creating canvas of size {:?}", canvas_size);
@@ -90,44 +94,50 @@ impl PipelineState {
             conf::NumSamples::One,
         )?;
 
-		let mut text = Vec::with_capacity(10);
-		for i in 0..10 {
-			let fragment = graphics::TextFragment::new(i.to_string())
-				.color(graphics::WHITE)
-				.font(self.font)
-				.scale(graphics::Scale::uniform(self.text_size));
+        let mut text = Vec::with_capacity(10);
+        for i in 0..10 {
+            let fragment = graphics::TextFragment::new(i.to_string())
+                .color(graphics::WHITE)
+                .font(self.font)
+                .scale(graphics::Scale::uniform(self.text_size));
 
-			text.push(graphics::Text::new(fragment));
-		}
+            text.push(graphics::Text::new(fragment));
+        }
 
-		self.number_render = Some(NumberRender {canvas, text});
+        self.number_render = Some(NumberRender { canvas, text });
 
-		self.progress = GenProgress::Draw;
+        self.progress = GenProgress::Draw;
         Ok(())
     }
 
     /// # Save
     /// Save stuff that should be saved to a file
-	fn save(&mut self, ctx: &mut ggez::Context) -> GameResult<()> {
-		if let Some(number_render) = &self.number_render {
-			let image = &number_render.canvas.image();
+    fn save(&mut self, ctx: &mut ggez::Context) -> GameResult<()> {
+        if let Some(number_render) = &self.number_render {
+            let image = &number_render.canvas.image();
 
             info!("Rendering to: {}", self.target_path);
-			image.encode(ctx, graphics::ImageFormat::Png, &self.target_path)?;
-			self.progress = GenProgress::Done;
-		} else {
-			error!("{}, {}: No number_render at pipeline save. Can't save nothing", file!(), line!());
-			return Err(ggez::GameError::RenderError("Missing number_render".to_string()));
-		}
+            image.encode(ctx, graphics::ImageFormat::Png, &self.target_path)?;
+            self.progress = GenProgress::Done;
+        } else {
+            error!(
+                "{}, {}: No number_render at pipeline save. Can't save nothing",
+                file!(),
+                line!()
+            );
+            return Err(ggez::GameError::RenderError(
+                "Missing number_render".to_string(),
+            ));
+        }
 
         Ok(())
-	}
+    }
 }
 
 impl State for PipelineState {
     /// # Update
     /// Update does different things depending on the gen progress
-    /// - If ```progress``` is Setup it runs the ```setup``` method 
+    /// - If ```progress``` is Setup it runs the ```setup``` method
     /// - If ```progress``` is Draw it does nothing
     /// - If ```progress``` is Save it runs the ```save``` method that saves the result to file
     /// - If ```progress``` is Done it cleans up and then returns pop
@@ -139,41 +149,79 @@ impl State for PipelineState {
             }
             GenProgress::Draw => Ok(UpdateResult::Block),
             GenProgress::Save => {
-				self.save(ctx)?;
-				Ok(UpdateResult::Block)
-			}
+                self.save(ctx)?;
+                Ok(UpdateResult::Block)
+            }
+            GenProgress::Show => Ok(UpdateResult::Block),
             GenProgress::Done => {
                 let time_elapsed: Duration = timer::time_since_start(ctx) - self.timer;
                 info!("Pipeline done, took {} seconds", time_elapsed.as_secs());
                 Ok(UpdateResult::Pop)
-            },
+            }
         }
     }
 
     /// # Draw
     /// Runs drawing functions that draws to canvas that later gets saved
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<()> {
-		if let (GenProgress::Draw, Some(n_render)) = (&self.progress, &self.number_render) {
-			graphics::set_canvas(ctx, Some(&n_render.canvas));
+        if let (GenProgress::Draw, Some(n_render)) = (&self.progress, &self.number_render) {
+            graphics::set_canvas(ctx, Some(&n_render.canvas));
 
-			for (i, text) in n_render.text.iter().enumerate() {
-				let x = (i % 3) as f32 * self.game_config.square_size + self.game_config.square_size / 2.0;
-				let y = (i / 3) as f32 * self.game_config.square_size + self.game_config.square_size / 2.0;
+            for (i, text) in n_render.text.iter().enumerate() {
+                let x = (i % 3) as f32 * self.game_config.square_size
+                    + self.game_config.square_size / 2.0;
+                let y = (i / 3) as f32 * self.game_config.square_size
+                    + self.game_config.square_size / 2.0;
 
-				let param = graphics::DrawParam::new()
-					.offset(cgmath::Point2::new(0.5, 0.5))
-					.dest(cgmath::point2(x, y));
+                let param = graphics::DrawParam::new()
+                    .offset(cgmath::Point2::new(0.5, 0.5))
+                    .dest(cgmath::point2(x, y));
 
-				graphics::draw(ctx, text, param)?;
-			}
+                graphics::draw(ctx, text, param)?;
+            }
 
-			graphics::set_canvas(ctx, None);
-			self.progress = GenProgress::Save;
-		} else if let (GenProgress::Draw, None) = (&self.progress, &self.number_render) {
-			error!("{}, {}: Pipeline entered draw without number_render.", file!(), line!());
-			return Err(ggez::GameError::RenderError("Missing number_render".to_string()));
-		}
+            graphics::set_canvas(ctx, None);
 
-		Ok(())
+            // temporary way might change to something better later
+            if PAUSE {
+                self.progress = GenProgress::Show;
+            } else {
+                self.progress = GenProgress::Save;
+            }
+        } else if let (GenProgress::Draw, None) = (&self.progress, &self.number_render) {
+            error!(
+                "{}, {}: Pipeline entered draw without number_render.",
+                file!(),
+                line!()
+            );
+            return Err(ggez::GameError::RenderError(
+                "Missing number_render".to_string(),
+            ));
+        } else if let (GenProgress::Show, Some(n_render)) = (&self.progress, &self.number_render) {
+            graphics::draw(ctx, &n_render.canvas, graphics::DrawParam::default())?;
+        }
+
+        Ok(())
+    }
+
+    fn key_up_event(
+        &mut self,
+        _ctx: &mut ggez::Context,
+        keycode: keyboard::KeyCode,
+        _keymods: keyboard::KeyMods,
+    ) -> ggez::GameResult<EventResult> {
+
+        if let GenProgress::Show = &self.progress {
+
+            if let keyboard::KeyCode::Return = keycode {
+                self.progress = GenProgress::Save
+
+            } else if let keyboard::KeyCode::Escape = keycode {
+                self.progress = GenProgress::Done
+
+            }
+        }
+
+        Ok(EventResult::LetThrough)
     }
 }

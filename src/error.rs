@@ -6,15 +6,15 @@ pub enum WrappedError {
 
 #[derive(Debug, Clone)]
 pub struct LocatedError {
-    error : WrappedError,
-    location : String,
+    error: WrappedError,
+    location: String,
 }
 
 impl LocatedError {
     pub fn new(error: impl Into<WrappedError>, location: String) -> Self {
         Self {
-            error : error.into(),
-            location
+            error: error.into(),
+            location,
         }
     }
 }
@@ -34,8 +34,6 @@ impl From<ron::error::Error> for WrappedError {
 #[macro_export]
 macro_rules! err_here {
     () => {
-        |e| {
-            LocatedError::new(e, format!("at line {} in {}", line!(), file!()))
-        }
+        |e| LocatedError::new(e, format!("at line {} in {}", line!(), file!()))
     };
 }

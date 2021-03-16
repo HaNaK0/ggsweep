@@ -70,4 +70,13 @@ pub trait State {
     ) -> ggez::GameResult<EventResult> {
         Ok(EventResult::LetThrough)
     }
+
+    fn key_up_event(
+        &mut self,
+        _ctx: &mut ggez::Context,
+        _keycode: ggez::input::keyboard::KeyCode,
+        _keymods: ggez::input::keyboard::KeyMods,
+    ) -> ggez::GameResult<EventResult> {
+        Ok(EventResult::LetThrough)
+    }
 }

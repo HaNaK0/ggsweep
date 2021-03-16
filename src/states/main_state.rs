@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 
 use log::{error, info};
 
-use crate::state::{self ,EventResult};
+use crate::state::{self, EventResult};
 
 /// The main state that contains all other states in a state stack
 pub struct MainState {
@@ -53,7 +53,7 @@ impl event::EventHandler for MainState {
                 }
                 state::UpdateResult::Pop => {
                     self.state_stack.pop_front();
-                    
+
                     if self.state_stack.is_empty() {
                         info!("no states left");
                         ggez::event::quit(ctx)
@@ -149,6 +149,28 @@ impl event::EventHandler for MainState {
                 }
                 Err(e) => {
                     error!("Encountered error in mouse button down: {:?}", e);
+                    self.event_result = Err(e);
+                    break;
+                }
+            }
+        }
+    }
+
+    fn key_up_event(
+        &mut self,
+        ctx: &mut Context,
+        keycode: ggez::input::keyboard::KeyCode,
+        keymods: ggez::input::keyboard::KeyMods,
+    ) {
+        for state in &mut self.state_stack {
+            match state.key_up_event(ctx, keycode, keymods) {
+                Ok(r) => {
+                    if r == EventResult::Block {
+                        break;
+                    }
+                }
+                Err(e) => {
+                    error!("Encountered error in key up event: {:?}", e);
                     self.event_result = Err(e);
                     break;
                 }

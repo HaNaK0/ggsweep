@@ -204,6 +204,7 @@ impl State for PipelineState {
         Ok(())
     }
 
+    /// # Key up event
     fn key_up_event(
         &mut self,
         _ctx: &mut ggez::Context,

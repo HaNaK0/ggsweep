@@ -1,0 +1,32 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Launch Pipeline",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceRoot}/target/debug/pipeline.exe",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceRoot}",
+			"environment": [],
+			"console": "newExternalWindow",
+			"preLaunchTask": "rust: cargo build pipeline"
+		},
+		{
+			"name": "Launch Game",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceRoot}/target/debug/ggsweep.exe",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceRoot}",
+			"environment": [],
+			"console": "newExternalWindow",
+			"preLaunchTask": "rust: cargo build"
+		},
+	]
+}

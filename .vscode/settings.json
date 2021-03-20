@@ -1,3 +1,7 @@
 {
-	"debug.allowBreakpointsEverywhere": true
+	"debug.allowBreakpointsEverywhere": true,
+	"cSpell.words": [
+		"ggez",
+		"ggsweep"
+	]
 }

@@ -37,7 +37,7 @@ pub struct PipelineState {
 }
 
 /// # Number render
-/// A struct that contains the information needed for prerendering text to a canvas
+/// A struct that contains the information needed for pre rendering text to a canvas
 struct NumberRender {
     canvas: graphics::Canvas,
     text: Vec<graphics::Text>,
@@ -50,7 +50,7 @@ impl PipelineState {
         gen_conf_path: &str,
         ctx: &mut ggez::Context,
     ) -> Result<PipelineState, LocatedError> {
-        info!("Pipline load stated");
+        info!("Pipeline load stated");
         let load_start = timer::time_since_start(ctx);
 
         let rdr = filesystem::open(ctx, gen_conf_path).map_err(err_here!())?;
@@ -65,7 +65,7 @@ impl PipelineState {
 
         let load_end = timer::time_since_start(ctx);
         let time: Duration = load_end - load_start;
-        info!("Loaded pipline, it took {} seconds", time.as_secs());
+        info!("Loaded pipeline, it took {} seconds", time.as_secs());
 
         Ok(PipelineState {
             game_config,
@@ -81,7 +81,7 @@ impl PipelineState {
     /// # Setup
     /// Create stuff needed for rendering
     fn setup(&mut self, ctx: &mut ggez::Context) -> GameResult<()> {
-        info!("Pipline started");
+        info!("Pipeline started");
         self.timer = timer::time_since_start(ctx);
 
         let canvas_size = self.game_config.square_size * 3.0;

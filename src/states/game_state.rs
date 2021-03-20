@@ -14,12 +14,12 @@ use crate::{config::GameConfig, state::*};
 /// Used for points
 type Point2 = cgmath::Point2<f32>;
 /// # Index Type
-/// The type used for indecies
+/// The type used for indices
 type IndexType = usize;
 
 /// # Square State
 /// The state of a square   
-/// A square can either be closed and the bool states wetehr the player has set a flag on the square
+/// A square can either be closed and the bool states wether the player has set a flag on the square
 /// or it can be open and then the number represents the number of neighboring mines
 #[derive(Clone, Debug, PartialEq)]
 enum SquareState {
@@ -64,7 +64,7 @@ impl GameState {
     }
 
     /// # Index To Point
-    /// Converts from a linear index to a 2 demensional point.   
+    /// Converts from a linear index to a 2 dimensional point.   
     ///
     /// returns:   
     /// x = index % game width   
@@ -86,7 +86,7 @@ impl GameState {
     }
 
     /// # Count neighbors
-    /// Counts the amount of neigboring squares with mines
+    /// Counts the amount of neighboring squares with mines
     fn count_neighbors(&self, i: usize) -> u8 {
         let point = self.index_to_point(i);
         let mut count = 0;
@@ -158,7 +158,7 @@ impl GameState {
     }
 
     /// # Open
-    /// Opens a square and checks the ammount of neighboring mines   
+    /// Opens a square and checks the amount of neighboring mines   
     /// If mines aren't generated it will generate them first
     fn open(&mut self, index: IndexType) {
         if self.mines.is_empty() {
@@ -276,7 +276,7 @@ impl State for GameState {
     }
 
     /// # Mouse Button Down Event
-    /// Triggerd when the mousebutton is pressed down.   
+    /// Triggered when the mouse button is pressed down.   
     /// Saves which square the mouse was over when the button was pressed.
     fn mouse_button_down_event(
         &mut self,

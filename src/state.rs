@@ -32,7 +32,7 @@ pub trait State {
     /// Called in main_state draw does not return a result but the MainState uses the let_through_draw to check wether to draw the underlying states
     fn draw(&mut self, _ctx: &mut ggez::Context) -> ggez::GameResult<()>;
 
-    /// Called by mainstate draw to check wether the state blow this one should be drawn
+    /// Called by main state draw to check wether the state blow this one should be drawn
     fn let_through_draw(&mut self) -> bool {
         false
     }

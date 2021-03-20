@@ -10,7 +10,7 @@ pub struct GameColors {
 }
 
 /// # Game Config
-/// The main game config struct loaded fomr config.ron in resources
+/// The main game config struct loaded from config.ron in resources
 #[derive(Deserialize, Debug, Clone)]
 pub struct GameConfig {
     pub game_size: (usize, usize),

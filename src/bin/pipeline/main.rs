@@ -15,18 +15,18 @@ fn main() -> Result<(), LocatedError> {
         .unwrap();
 
     //setup the resource path
-    let resuource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
         let mut path = path::PathBuf::from(manifest_dir);
         path.push("resources");
         info!("Resource directory set to {:?}", path);
         path
     } else {
-        info!("Failed to find cargo manfiest directory will look fo resources in \"./resources\"");
+        info!("Failed to find cargo manifest directory will look fo resources in \"./resources\"");
         path::PathBuf::from("./resources")
     };
 
     // Create the context builder
-    let cb = ContextBuilder::new("ggsweep Pipeline", "HaNaK0").add_resource_path(resuource_dir);
+    let cb = ContextBuilder::new("ggsweep Pipeline", "HaNaK0").add_resource_path(resource_dir);
 
     let (ctx, events_loop) = &mut cb.build().map_err(err_here!())?;
 

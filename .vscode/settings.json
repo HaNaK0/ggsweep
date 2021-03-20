@@ -1,7 +1,10 @@
 {
 	"debug.allowBreakpointsEverywhere": true,
 	"cSpell.words": [
+		"Deque",
+		"cgmath",
 		"ggez",
-		"ggsweep"
+		"ggsweep",
+		"keymods"
 	]
 }

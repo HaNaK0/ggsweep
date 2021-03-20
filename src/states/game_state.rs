@@ -85,21 +85,47 @@ impl GameState {
         point.x as usize + point.y as usize * self.game_config.game_size.0
     }
 
-    /// # Count neighbors
-    /// Counts the amount of neighboring squares with mines
-    fn count_neighbors(&self, i: usize) -> u8 {
-        let point = self.index_to_point(i);
-        let mut count = 0;
+    /// # Get Neighbor
+    /// Gets the indices for all of the neighbors to a square
+    fn get_neighbors(&self, index: usize) -> [Option<usize>; 8]{
+        let point = self.index_to_point(index);
+        let mut i = 0;
+        let mut neighbors = [Option::<usize>::None; 8];
         //Loop through all neighbors
-        for x in -1..1 {
-            for y in -1..1 {
+        for x in -1..2 {
+            for y in -1..2 {
                 //Skip the middle
                 if x == 0 && y == 0 {
                     continue;
                 }
 
                 let current_point = point + cgmath::vec2(x, y);
-                if self.mines.contains(&self.point_to_index(current_point)) {
+                
+                if current_point.x < 0 || current_point.y < 0 {
+                    continue;
+                }
+
+                if current_point.x >= self.game_config.game_size.0 as i32 || current_point.y >= self.game_config.game_size.1 as i32 {
+                    continue;
+                }
+
+                neighbors[i] = Some(self.point_to_index(current_point));
+                i += 1;
+            }
+        }
+
+        neighbors
+    }
+
+    /// # Count neighbors
+    /// Counts the amount of neighboring squares with mines
+    fn count_neighbors(&self, i: usize) -> u8 {
+        let mut count = 0;
+        let neighbors = self.get_neighbors(i);
+
+        for neighbor in neighbors.iter() {
+            if let Some(index) = neighbor {
+                if self.mines.contains(index) {
                     count += 1;
                 }
             }
@@ -136,8 +162,6 @@ impl GameState {
                         } else {
                             colors.square.into()
                         }
-                    } else if self.mines.contains(&i) {
-                        colors.mine_square.into()
                     } else {
                         colors.square.into()
                     };
@@ -165,7 +189,20 @@ impl GameState {
             self.generate_mines(self.game_config.number_of_mines, index);
         }
 
-        self.grid[index] = SquareState::Open(self.count_neighbors(index));
+        let neighbor_count = self.count_neighbors(index);
+        self.grid[index] = SquareState::Open(neighbor_count);
+
+        if neighbor_count > 0 {
+            return;
+        }
+
+        for &neighbor in self.get_neighbors(index).iter() {
+            if let Some(index) = neighbor {
+                if let SquareState::Closed(_b) = self.grid[index] {
+                    self.open(index)
+                }
+            }
+        }
     }
 
     /// # Generate mines

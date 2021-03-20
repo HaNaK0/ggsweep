@@ -92,8 +92,8 @@ impl GameState {
         let mut i = 0;
         let mut neighbors = [Option::<usize>::None; 8];
         //Loop through all neighbors
-        for x in -1..1 {
-            for y in -1..1 {
+        for x in -1..2 {
+            for y in -1..2 {
                 //Skip the middle
                 if x == 0 && y == 0 {
                     continue;
@@ -105,7 +105,7 @@ impl GameState {
                     continue;
                 }
 
-                if current_point.x >= self.game_config.game_size.0 as i32 || current_point.y <= self.game_config.game_size.1 as i32 {
+                if current_point.x >= self.game_config.game_size.0 as i32 || current_point.y >= self.game_config.game_size.1 as i32 {
                     continue;
                 }
 
@@ -198,6 +198,12 @@ impl GameState {
         }
 
         self.grid[index] = SquareState::Open(self.count_neighbors(index));
+
+        for &neighbor in self.get_neighbors(index).iter() {
+            if let Some(index) = neighbor {
+                self.grid[index] = SquareState::Open(self.count_neighbors(index))
+            }
+        }
     }
 
     /// # Generate mines

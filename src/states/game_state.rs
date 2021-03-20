@@ -85,6 +85,38 @@ impl GameState {
         point.x as usize + point.y as usize * self.game_config.game_size.0
     }
 
+    /// # Get Neighbor
+    /// Gets the indices for all of the neighbors to a square
+    fn get_neighbors(&self, index: usize) -> [Option<usize>; 8]{
+        let point = self.index_to_point(index);
+        let mut i = 0;
+        let mut neighbors = [Option::<usize>::None; 8];
+        //Loop through all neighbors
+        for x in -1..1 {
+            for y in -1..1 {
+                //Skip the middle
+                if x == 0 && y == 0 {
+                    continue;
+                }
+
+                let current_point = point + cgmath::vec2(x, y);
+                
+                if current_point.x < 0 || current_point.y < 0 {
+                    continue;
+                }
+
+                if current_point.x >= self.game_config.game_size.0 as i32 || current_point.y <= self.game_config.game_size.1 as i32 {
+                    continue;
+                }
+
+                neighbors[i] = Some(self.point_to_index(current_point));
+                i += 1;
+            }
+        }
+
+        neighbors
+    }
+
     /// # Count neighbors
     /// Counts the amount of neighboring squares with mines
     fn count_neighbors(&self, i: usize) -> u8 {

@@ -94,7 +94,7 @@ impl GameState {
 
     /// # Get Neighbor
     /// Gets the indices for all of the neighbors to a square
-    fn get_neighbors(&self, index: usize) -> [Option<usize>; 8]{
+    fn get_neighbors(&self, index: usize) -> [Option<usize>; 8] {
         let point = self.index_to_point(index);
         let mut i = 0;
         let mut neighbors = [Option::<usize>::None; 8];
@@ -107,12 +107,14 @@ impl GameState {
                 }
 
                 let current_point = point + cgmath::vec2(x, y);
-                
+
                 if current_point.x < 0 || current_point.y < 0 {
                     continue;
                 }
 
-                if current_point.x >= self.game_config.game_size.0 as i32 || current_point.y >= self.game_config.game_size.1 as i32 {
+                if current_point.x >= self.game_config.game_size.0 as i32
+                    || current_point.y >= self.game_config.game_size.1 as i32
+                {
                     continue;
                 }
 
@@ -153,7 +155,6 @@ impl GameState {
             let mut params = graphics::DrawParam::new();
             params.dest = v.into();
 
-
             match self.grid[i] {
                 SquareState::Closed(flag) => {
                     // if the mouse is pressed the square it was pressed on is the selected one
@@ -188,14 +189,12 @@ impl GameState {
                         params.color = graphics::WHITE;
                         graphics::draw(ctx, &self.mine_image, params)?;
                     } else if mine_count > 0 {
-                        let origin_point = cgmath::vec2((mine_count % 3) as f32, (mine_count / 3) as f32);
-                        let origin_pos: cgmath::Vector2<f32> = origin_point * self.game_config.square_size / 96.0;
-                        params.src = graphics::Rect::new(
-                            origin_pos.x,
-                            origin_pos.y,
-                            1.0 / 3.0,
-                            1.0 / 3.0,
-                        );
+                        let origin_point =
+                            cgmath::vec2((mine_count % 3) as f32, (mine_count / 3) as f32);
+                        let origin_pos: cgmath::Vector2<f32> =
+                            origin_point * self.game_config.square_size / 96.0;
+                        params.src =
+                            graphics::Rect::new(origin_pos.x, origin_pos.y, 1.0 / 3.0, 1.0 / 3.0);
 
                         graphics::draw(ctx, &self.number_image, params)?;
                     }

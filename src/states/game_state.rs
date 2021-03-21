@@ -1,6 +1,5 @@
 use std::collections;
 
-//use cgmath::prelude::*;
 use ggez::{graphics, Context, GameResult};
 
 #[allow(unused_imports)]

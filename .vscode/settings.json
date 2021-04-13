@@ -2,6 +2,7 @@
 	"debug.allowBreakpointsEverywhere": true,
 	"cSpell.words": [
 		"Deque",
+		"Spritesheet",
 		"cgmath",
 		"ggez",
 		"ggsweep",

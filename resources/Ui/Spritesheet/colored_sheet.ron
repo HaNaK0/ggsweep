@@ -1,9 +1,9 @@
-ColoredSheet (
+SheetInfo (
 	files : {
 		"blue" : "Ui/Spritesheet/blueSheet.png",
 		"green" : "Ui/Spritesheet/greenSheet.png"
-	}
-	textures : [
+	},
+	sprites : [
 		(
 			//<SubTexture name="blue_boxCheckmark.png" x="380" y="36" width="38" height="36"/>
 			name: "boxCheckmark",
@@ -204,6 +204,6 @@ ColoredSheet (
 			width: 17,
 			height: 17,
 		),
-	]
+	],
 )
 	

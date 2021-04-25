@@ -52,7 +52,6 @@ pub fn test_load(ctx: &mut Context) {
 }
 
 /// A sprite sheet keeping track of different sprites in the same image file
-#[allow(dead_code)]
 pub struct SpriteSheet {
     sheet_info: SheetInfo,
     image: graphics::Image,
@@ -108,5 +107,14 @@ impl SpriteSheet {
         } else {
             None
         }
+    }
+
+    pub fn get_sprite_pixel_size(&self, sprite_name: &str) -> Option<cgmath::Vector2<f32>> {
+        self.sprite_rects.get(sprite_name).map(|r| {
+            cgmath::vec2(
+                r.w * self.image.dimensions().w,
+                r.h * self.image.dimensions().h,
+            )
+        })
     }
 }

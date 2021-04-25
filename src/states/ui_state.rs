@@ -5,7 +5,7 @@ use crate::{
     state::{State, UpdateResult},
     ui::Element,
 };
-use ggez::{filesystem, graphics, Context};
+use ggez::{filesystem, Context};
 use ron::de::from_reader;
 
 pub struct UiState {
@@ -23,16 +23,9 @@ impl UiState {
             sheet_info.into_sprite_sheet(ctx, "blue")?
         };
 
-        let (_, sprite_rect) = sprite_sheet.get_sprite_and_rect("button01").unwrap();
+        let position = cgmath::point2(100.0, 100.0);
 
-        let target_rect = graphics::Rect {
-            x: 100.0,
-            y: 100.0,
-            w: sprite_rect.w,
-            h: sprite_rect.h,
-        };
-
-        let button = Element::new_image_element(target_rect, "button01");
+        let button = Element::new_element(position, "button01", "hello world");
 
         Ok(UiState {
             sprite_sheet,

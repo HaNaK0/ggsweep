@@ -1,6 +1,7 @@
 SheetInfo (
+	name : "Colored Sheet",
 	files : {
-		"blue" : "Ui/Spritesheet/blueSheet.png",
+		"blue" : "/Ui/Spritesheet/blueSheet.png",
 		"green" : "Ui/Spritesheet/greenSheet.png"
 	},
 	sprites : [

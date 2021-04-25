@@ -4,12 +4,13 @@ use ggez::{event, graphics, ContextBuilder};
 use ggsweep::{err_here, error::LocatedError};
 use log::info;
 
-use ggsweep::states::{GameState, MainState};
+use ggsweep::states::{MainState, UiState};
 
 fn main() -> Result<(), LocatedError> {
     // Start the logger
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Warn)
+        .with_module_level("ggez", log::LevelFilter::Trace)
         .with_module_level("ggsweep", log::LevelFilter::Trace)
         .init()
         .unwrap();
@@ -31,10 +32,10 @@ fn main() -> Result<(), LocatedError> {
 
     info!("{}", graphics::renderer_info(ctx).map_err(err_here!())?);
 
-    let game_config_file = ggez::filesystem::open(ctx, "\\config.ron").map_err(err_here!())?;
-    let game_config = ron::de::from_reader(game_config_file).map_err(err_here!())?;
+    //let game_config_file = ggez::filesystem::open(ctx, "\\config.ron").map_err(err_here!())?;
+    //let game_config = ron::de::from_reader(game_config_file).map_err(err_here!())?;
 
-    let initial_state = Box::new(GameState::new(ctx, game_config).map_err(err_here!())?);
+    let initial_state = Box::new(UiState::create_main_menu_state(ctx)?);
     let state = &mut MainState::new(initial_state, graphics::Color::from_rgb(38, 38, 38))
         .map_err(err_here!())?;
 

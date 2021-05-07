@@ -52,6 +52,7 @@ pub fn test_load(ctx: &mut Context) {
 }
 
 /// A sprite sheet keeping track of different sprites in the same image file
+#[derive(Debug)]
 pub struct SpriteSheet {
     sheet_info: SheetInfo,
     image: graphics::Image,

@@ -57,7 +57,7 @@ impl Element {
 
         if let Some(label) = &self.label {
             // If this element has a sprite draw the label in the middle. If this does not have a sprite draw the label att the elements position
-            let label_pos= if let Some(sprite_name) = &self.sprite_name {
+            let label_pos = if let Some(sprite_name) = &self.sprite_name {
                 let sprite_size = sprite_sheet.get_sprite_pixel_size(sprite_name.as_str());
                 let label_size = cgmath::vec2(label.width(ctx) as f32, label.height(ctx) as f32);
                 self.position + sprite_size.unwrap() / 2.0 - label_size / 2.0
@@ -81,29 +81,28 @@ impl Element {
     }
 
     /// Create a new element with sprite and label
-    pub fn new_element(position: cgmath::Point2<f32>, sprite_name: &str, label: &str) -> Self {
+    pub fn new_element(position: cgmath::Point2<f32>) -> Self {
         Element {
             position,
-            sprite_name: Some(sprite_name.to_string()),
-            label: Some(graphics::Text::new(label)),
-        }
-    }
-
-    /// Create a new element without any text on it
-    pub fn new_image_element(position: cgmath::Point2<f32>, sprite_name: &str) -> Self {
-        Element {
-            position,
-            sprite_name: Some(sprite_name.to_string()),
+            sprite_name: None,
             label: None,
         }
     }
 
-    /// Create a new label element that only has text
-    pub fn new_label_element(position: cgmath::Point2<f32>, label: &str) -> Self {
-        Element {
-            position,
-            sprite_name: None,
-            label: Some(graphics::Text::new(label)),
-        }
+    pub fn set_sprite(mut self, sprite_name: &str) -> Self {
+        self.sprite_name = Some(sprite_name.to_string());
+        self
+    }
+
+    pub fn set_label(
+        mut self,
+        label: &str,
+        font: &graphics::Font,
+        scale: &graphics::Scale,
+    ) -> Self {
+        let mut label = graphics::Text::new(label);
+        label.set_font(*font, *scale);
+        self.label = Some(label);
+        self
     }
 }

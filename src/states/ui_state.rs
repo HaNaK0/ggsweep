@@ -1,5 +1,11 @@
-use crate::{err_here, error::LocatedError, sprite_sheet::{SheetInfo, SpriteSheet}, state::{EventResult, State, UpdateResult}, ui::{Element, Panel}};
-use ggez::{filesystem, graphics, Context, conf};
+use crate::{
+    err_here,
+    error::LocatedError,
+    sprite_sheet::{SheetInfo, SpriteSheet},
+    state::{EventResult, State, UpdateResult},
+    ui::{Element, Panel},
+};
+use ggez::{filesystem, graphics, Context};
 use ron::de::from_reader;
 
 pub struct UiState {
@@ -31,7 +37,7 @@ impl UiState {
             "panel_bottom_right".to_string(),
         ];
 
-        let panel_rect = graphics::Rect::new_i32(32,32, 244, 244);
+        let panel_rect = graphics::Rect::new_i32(32, 32, 244, 244);
 
         let panel = Panel::new(panel_rect, panel_sprites);
 
@@ -44,7 +50,7 @@ impl UiState {
         })
     }
 
-    pub fn create_game_over_state(ctx: &mut Context, has_won: bool) -> Result<Self, LocatedError>{
+    pub fn create_game_over_state(ctx: &mut Context, has_won: bool) -> Result<Self, LocatedError> {
         let sprite_sheet = {
             let file =
                 filesystem::open(ctx, "/Ui/Spritesheet/colored_sheet.ron").map_err(err_here!())?;
@@ -64,7 +70,7 @@ impl UiState {
             "panel_bottom_right".to_string(),
         ];
 
-        let panel_rect = graphics::Rect::new_i32(32,320 / 2 - 32, 320-64, 64);
+        let panel_rect = graphics::Rect::new_i32(32, 320 / 2 - 32, 320 - 64, 64);
 
         let panel = Panel::new(panel_rect, panel_sprites);
 
@@ -72,10 +78,10 @@ impl UiState {
         let scale = graphics::Scale::uniform(32.0);
 
         let game_over_text = if has_won {
-            Element::new_element(cgmath::point2(320.0 / 2.0, 320.0 / 2.0))
+            Element::new_element(cgmath::point2(85.0, 320.0 / 2.0 - 16.0))
                 .set_label("You Won", &font, &scale)
         } else {
-            Element::new_element(cgmath::point2( 64.0, 320.0 / 2.0 - 16.0))
+            Element::new_element(cgmath::point2(64.0, 320.0 / 2.0 - 16.0))
                 .set_label("You Lost", &font, &scale)
         };
 
@@ -115,17 +121,36 @@ impl State for UiState {
     fn let_through_draw(&mut self) -> bool {
         true
     }
-    
-    fn mouse_button_down_event(&mut self, _ctx: &mut ggez::Context, _button: ggez::input::mouse::MouseButton, _x: f32, _y: f32) -> ggez::GameResult<EventResult> {
+
+    fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut ggez::Context,
+        _button: ggez::input::mouse::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) -> ggez::GameResult<EventResult> {
         Ok(EventResult::Block)
     }
 
-    fn mouse_button_up_event(&mut self, _ctx: &mut ggez::Context, _button: ggez::input::mouse::MouseButton, _x: f32, _y: f32) -> ggez::GameResult<EventResult> {
+    fn mouse_button_up_event(
+        &mut self,
+        _ctx: &mut ggez::Context,
+        _button: ggez::input::mouse::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) -> ggez::GameResult<EventResult> {
         self.quit = true;
         Ok(EventResult::Block)
     }
 
-    fn mouse_motion_event(&mut self, _ctx: &mut ggez::Context, _x: f32, _y: f32, _dx: f32, _dy: f32) -> ggez::GameResult<EventResult> {
+    fn mouse_motion_event(
+        &mut self,
+        _ctx: &mut ggez::Context,
+        _x: f32,
+        _y: f32,
+        _dx: f32,
+        _dy: f32,
+    ) -> ggez::GameResult<EventResult> {
         Ok(EventResult::Block)
-    } 
+    }
 }

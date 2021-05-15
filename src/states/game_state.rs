@@ -1,4 +1,4 @@
-use std::collections;
+use std::{collections::{self, HashSet}, usize};
 
 use ggez::{graphics, Context, GameResult};
 
@@ -30,8 +30,8 @@ enum SquareState {
 /// The progress of the current game
 enum Progress {
     InGame,
-    Won,
     Lost,
+    Won,
     GameOver,
 }
 
@@ -46,7 +46,7 @@ pub struct GameState {
     square: graphics::Mesh,
     mouse_index: Option<IndexType>,
     mouse_press: Option<(ggez::input::mouse::MouseButton, IndexType)>,
-    progress: Progress
+    progress: Progress,
 }
 
 impl GameState {
@@ -223,6 +223,10 @@ impl GameState {
             return;
         }
 
+        if self.mines == self.get_closed_squares() {
+            self.progress = Progress::Won;
+        }
+
         if neighbor_count > 0 {
             return;
         }
@@ -256,6 +260,37 @@ impl GameState {
         trace!("Mines generated at {:?} after {} tries", result, tries);
         self.mines = result;
     }
+
+    /// Get all the indices for the squares that are still closed
+    fn get_closed_squares(&self) -> HashSet<usize> {
+        let iter = self.grid.iter()
+            .enumerate()
+            .filter_map(|s|{
+                if let SquareState::Closed(_) = s.1  {
+                    Some(s.0)
+                } else {
+                    None
+                }
+            });
+
+        iter.collect()
+    }
+
+    fn get_flagged_squares(&self) -> HashSet<usize> {
+        let iter = self.grid.iter()
+            .enumerate()
+            .filter_map(|s|{
+                if let SquareState::Closed(flagged) = s.1 {
+                    if *flagged {
+                        return Some(s.0);
+                    }
+                }
+
+                None
+            });
+
+        iter.collect()
+    }
 }
 
 impl State for GameState {
@@ -265,19 +300,21 @@ impl State for GameState {
         let _dt = ggez::timer::delta(ctx);
 
         match self.progress {
-            Progress::InGame => {}
-            Progress::Won => {
-                self.progress = Progress::GameOver;
-                let new_state = ui_state::UiState::create_game_over_state(ctx, true)?;
-                return Ok(UpdateResult::Push(Box::new(new_state)));
+            Progress::InGame => {
             }
             Progress::Lost => {
                 self.progress = Progress::GameOver;
                 let new_state = ui_state::UiState::create_game_over_state(ctx, false)?;
                 return Ok(UpdateResult::Push(Box::new(new_state)));
             }
+            Progress::Won => {
+                self.progress = Progress::GameOver;
+                let new_state = ui_state::UiState::create_game_over_state(ctx, true)?;
+                return Ok(UpdateResult::Push(Box::new(new_state)));
+            }
             Progress::GameOver => {
-                let new_state = GameState::new(ctx, self.game_config.clone()).map_err(err_here!())?;
+                let new_state =
+                    GameState::new(ctx, self.game_config.clone()).map_err(err_here!())?;
                 return Ok(UpdateResult::Swap(Box::new(new_state)));
             }
         }
@@ -342,7 +379,11 @@ impl State for GameState {
                     ggez::event::MouseButton::Right => {
                         // If right button is pressed we toggle the flag
                         if let SquareState::Closed(flagged) = self.grid[press_index as usize] {
-                            self.grid[press_index as usize] = SquareState::Closed(!flagged)
+                            self.grid[press_index as usize] = SquareState::Closed(!flagged);
+
+                            if self.mines == self.get_flagged_squares() {
+                                self.progress = Progress::Won;
+                            }
                         }
                     }
                     ggez::event::MouseButton::Middle => {}

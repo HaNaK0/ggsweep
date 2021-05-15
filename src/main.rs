@@ -1,6 +1,6 @@
 use std::{env, path};
 
-use ggez::{ContextBuilder, conf::WindowMode, event, graphics};
+use ggez::{conf::WindowMode, event, graphics, ContextBuilder};
 use ggsweep::{config::GameConfig, err_here, error::LocatedError, states::GameState};
 use log::info;
 
@@ -27,8 +27,7 @@ fn main() -> Result<(), LocatedError> {
     };
 
     // Create the context builder
-    let cb = ContextBuilder::new("Mine Sweeper", "HaNaK0")
-        .add_resource_path(resource_dir);
+    let cb = ContextBuilder::new("Mine Sweeper", "HaNaK0").add_resource_path(resource_dir);
 
     // Build the context
     let (ctx, events_loop) = &mut cb.build().map_err(err_here!())?;
@@ -41,17 +40,17 @@ fn main() -> Result<(), LocatedError> {
 
     //Set window mode
     let mode = WindowMode::default().dimensions(
-        game_config.game_size.0 as f32 * game_config.square_size, 
-        game_config.game_size.1 as f32 * game_config.square_size
+        game_config.game_size.0 as f32 * game_config.square_size,
+        game_config.game_size.1 as f32 * game_config.square_size,
     );
     graphics::set_mode(ctx, mode).map_err(err_here!())?;
 
     //Set the screen coordinates
     let screen_rect = graphics::Rect::new(
-        0.0, 
-        0.0, 
-        game_config.game_size.0 as f32 * game_config.square_size, 
-        game_config.game_size.1 as f32 * game_config.square_size
+        0.0,
+        0.0,
+        game_config.game_size.0 as f32 * game_config.square_size,
+        game_config.game_size.1 as f32 * game_config.square_size,
     );
     graphics::set_screen_coordinates(ctx, screen_rect).map_err(err_here!())?;
 

@@ -2,6 +2,7 @@
 pub enum WrappedError {
     GameError(ggez::GameError),
     RonError(ron::error::Error),
+    SheetError(String),
 }
 
 #[derive(Debug, Clone)]

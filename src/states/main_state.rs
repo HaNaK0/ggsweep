@@ -40,16 +40,16 @@ impl event::EventHandler for MainState {
         }
 
         for (i, state) in self.state_stack.iter_mut().enumerate() {
-            match state.update(ctx)? {
+            match state.update(ctx).unwrap() {
                 state::UpdateResult::LetThrough => {}
-                state::UpdateResult::Block => break,
+                state::UpdateResult::Block => return Ok(()),
                 state::UpdateResult::Swap(new_state) => {
                     self.state_stack[i] = new_state;
-                    break;
+                    return Ok(());
                 }
                 state::UpdateResult::Push(new_state) => {
                     self.state_stack.push_front(new_state);
-                    break;
+                    return Ok(());
                 }
                 state::UpdateResult::Pop => {
                     self.state_stack.pop_front();
@@ -59,7 +59,7 @@ impl event::EventHandler for MainState {
                         ggez::event::quit(ctx)
                     }
 
-                    break;
+                    return Ok(());
                 }
             }
         }

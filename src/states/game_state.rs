@@ -1,4 +1,4 @@
-use std::collections;
+use std::{collections::{self, HashSet}, usize};
 
 use ggez::{graphics, Context, GameResult};
 
@@ -7,17 +7,17 @@ use cgmath::prelude::*;
 use log::trace;
 use rand::prelude::*;
 
-use crate::{config::GameConfig, state::*};
+use crate::{config::GameConfig, err_here, error::LocatedError, state::*};
+
+use super::ui_state;
 
 //Types
-/// # Point2
 /// Used for points
 type Point2 = cgmath::Point2<f32>;
 /// # Index Type
 /// The type used for indices
 type IndexType = usize;
 
-/// # Square State
 /// The state of a square   
 /// A square can either be closed and the bool states wether the player has set a flag on the square
 /// or it can be open and then the number represents the number of neighboring mines
@@ -26,7 +26,15 @@ enum SquareState {
     Closed(bool),
     Open(u8),
 }
-/// # Game State
+
+/// The progress of the current game
+enum Progress {
+    InGame,
+    Lost,
+    Won,
+    GameOver,
+}
+
 /// The main game state that runs the game
 pub struct GameState {
     game_config: GameConfig,
@@ -38,10 +46,10 @@ pub struct GameState {
     square: graphics::Mesh,
     mouse_index: Option<IndexType>,
     mouse_press: Option<(ggez::input::mouse::MouseButton, IndexType)>,
+    progress: Progress,
 }
 
 impl GameState {
-    /// # New
     /// create a new game state
     pub fn new(ctx: &mut Context, game_config: GameConfig) -> GameResult<Self> {
         let grid =
@@ -66,10 +74,10 @@ impl GameState {
             square,
             mouse_index: None,
             mouse_press: None,
+            progress: Progress::InGame,
         })
     }
 
-    /// # Index To Point
     /// Converts from a linear index to a 2 dimensional point.   
     ///
     /// returns:   
@@ -82,7 +90,6 @@ impl GameState {
         )
     }
 
-    /// # Point To Index
     /// convert from a point to a index
     ///   
     /// returns:   
@@ -91,7 +98,6 @@ impl GameState {
         point.x as usize + point.y as usize * self.game_config.game_size.0
     }
 
-    /// # Get Neighbor
     /// Gets the indices for all of the neighbors to a square
     fn get_neighbors(&self, index: usize) -> [Option<usize>; 8] {
         let point = self.index_to_point(index);
@@ -125,7 +131,6 @@ impl GameState {
         neighbors
     }
 
-    /// # Count neighbors
     /// Counts the amount of neighboring squares with mines
     fn count_neighbors(&self, i: usize) -> u8 {
         let mut count = 0;
@@ -142,7 +147,6 @@ impl GameState {
         count
     }
 
-    /// # Draw Squares
     /// Draw the squares
     fn draw_squares(&self, ctx: &mut ggez::Context) -> GameResult<()> {
         let colors = &self.game_config.colors;
@@ -204,7 +208,6 @@ impl GameState {
         Ok(())
     }
 
-    /// # Open
     /// Opens a square and checks the amount of neighboring mines   
     /// If mines aren't generated it will generate them first
     fn open(&mut self, index: IndexType) {
@@ -214,6 +217,15 @@ impl GameState {
 
         let neighbor_count = self.count_neighbors(index);
         self.grid[index] = SquareState::Open(neighbor_count);
+
+        if self.mines.contains(&index) {
+            self.progress = Progress::Lost;
+            return;
+        }
+
+        if self.mines == self.get_closed_squares() {
+            self.progress = Progress::Won;
+        }
 
         if neighbor_count > 0 {
             return;
@@ -228,7 +240,6 @@ impl GameState {
         }
     }
 
-    /// # Generate mines
     /// Generate mines in random slots
     fn generate_mines(&mut self, number_of_mines: IndexType, graced_index: IndexType) {
         let mut rng = rand::thread_rng();
@@ -249,26 +260,74 @@ impl GameState {
         trace!("Mines generated at {:?} after {} tries", result, tries);
         self.mines = result;
     }
+
+    /// Get all the indices for the squares that are still closed
+    fn get_closed_squares(&self) -> HashSet<usize> {
+        let iter = self.grid.iter()
+            .enumerate()
+            .filter_map(|s|{
+                if let SquareState::Closed(_) = s.1  {
+                    Some(s.0)
+                } else {
+                    None
+                }
+            });
+
+        iter.collect()
+    }
+
+    fn get_flagged_squares(&self) -> HashSet<usize> {
+        let iter = self.grid.iter()
+            .enumerate()
+            .filter_map(|s|{
+                if let SquareState::Closed(flagged) = s.1 {
+                    if *flagged {
+                        return Some(s.0);
+                    }
+                }
+
+                None
+            });
+
+        iter.collect()
+    }
 }
 
 impl State for GameState {
-    /// # Update
     /// Main update
-    fn update(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<UpdateResult> {
+    fn update(&mut self, ctx: &mut ggez::Context) -> Result<UpdateResult, LocatedError> {
         //update delta time
         let _dt = ggez::timer::delta(ctx);
+
+        match self.progress {
+            Progress::InGame => {
+            }
+            Progress::Lost => {
+                self.progress = Progress::GameOver;
+                let new_state = ui_state::UiState::create_game_over_state(ctx, false)?;
+                return Ok(UpdateResult::Push(Box::new(new_state)));
+            }
+            Progress::Won => {
+                self.progress = Progress::GameOver;
+                let new_state = ui_state::UiState::create_game_over_state(ctx, true)?;
+                return Ok(UpdateResult::Push(Box::new(new_state)));
+            }
+            Progress::GameOver => {
+                let new_state =
+                    GameState::new(ctx, self.game_config.clone()).map_err(err_here!())?;
+                return Ok(UpdateResult::Swap(Box::new(new_state)));
+            }
+        }
 
         Ok(UpdateResult::Block)
     }
 
-    /// # Draw
     /// Draw the playing grid
     fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<()> {
         self.draw_squares(ctx)?;
         Ok(())
     }
 
-    /// # Mouse Motion Event
     /// When the mouse is moved we update to the mouse index to the index of the square
     /// which the mouse is currently over
     fn mouse_motion_event(
@@ -299,7 +358,6 @@ impl State for GameState {
         Ok(EventResult::Block)
     }
 
-    /// # Mouse Button Up Event
     /// Triggered when the mouse is released and is the end of a mouse press.   
     /// If the mouse is released on the same square as it was pressed it will call ```open```
     fn mouse_button_up_event(
@@ -321,7 +379,11 @@ impl State for GameState {
                     ggez::event::MouseButton::Right => {
                         // If right button is pressed we toggle the flag
                         if let SquareState::Closed(flagged) = self.grid[press_index as usize] {
-                            self.grid[press_index as usize] = SquareState::Closed(!flagged)
+                            self.grid[press_index as usize] = SquareState::Closed(!flagged);
+
+                            if self.mines == self.get_flagged_squares() {
+                                self.progress = Progress::Won;
+                            }
                         }
                     }
                     ggez::event::MouseButton::Middle => {}
@@ -335,7 +397,6 @@ impl State for GameState {
         Ok(EventResult::Block)
     }
 
-    /// # Mouse Button Down Event
     /// Triggered when the mouse button is pressed down.   
     /// Saves which square the mouse was over when the button was pressed.
     fn mouse_button_down_event(

@@ -1,3 +1,5 @@
+use crate::error::LocatedError;
+
 ///The result returned from an event handling function
 #[derive(PartialEq)]
 pub enum EventResult {
@@ -27,7 +29,7 @@ pub enum UpdateResult {
 /// By default it will block unimplemented events from passing through   
 pub trait State {
     /// Called called in main_state update
-    fn update(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<UpdateResult>;
+    fn update(&mut self, ctx: &mut ggez::Context) -> Result<UpdateResult, LocatedError>;
 
     /// Called in main_state draw does not return a result but the MainState uses the let_through_draw to check wether to draw the underlying states
     fn draw(&mut self, _ctx: &mut ggez::Context) -> ggez::GameResult<()>;

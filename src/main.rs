@@ -35,7 +35,7 @@ fn main() -> Result<(), LocatedError> {
     info!("{}", graphics::renderer_info(ctx).map_err(err_here!())?);
 
     //Load config
-    let game_config_file = ggez::filesystem::open(ctx, "\\config.ron").map_err(err_here!())?;
+    let game_config_file = ggez::filesystem::open(ctx, "/config.ron").map_err(err_here!())?;
     let game_config: GameConfig = ron::de::from_reader(game_config_file).map_err(err_here!())?;
 
     //Set window mode
